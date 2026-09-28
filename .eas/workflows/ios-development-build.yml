@@ -1,0 +1,15 @@
+# Builds the iOS development app on EAS whenever this branch is pushed — no CLI needed.
+# Requires the GitHub repo to be linked to the Expo project (expo.dev → aria → Project settings → GitHub).
+name: iOS development build
+
+on:
+  push:
+    branches: ['claude/blissful-bohr-bt1krl', 'main']
+
+jobs:
+  build_ios_development:
+    name: Build iOS (development)
+    type: build
+    params:
+      platform: ios
+      profile: development
