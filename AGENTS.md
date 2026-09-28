@@ -47,4 +47,4 @@ Docs: https://docs.expo.dev/eas/index.md
 - Never edit `src/theme/tokens.generated.ts` or `src/ui/icons.generated.ts` — run `pnpm gen:tokens` / `pnpm gen:icons`.
 - Native modules live in `modules/` and must keep a JS mock so web, Jest and Expo Go keep working.
 - `packages/score-engine` must stay pure TS (no React Native, no Node APIs in `src/`).
-- Before declaring work done: `pnpm typecheck`, `pnpm lint`, `pnpm test`.
+- Before declaring work done: `pnpm typecheck`, `pnpm test`. (ESLint was removed: its import resolver ships a native install script that EAS's pnpm refuses.)
