@@ -3,6 +3,11 @@ packages:
   - modules/*
 
 # unrs-resolver's install script only fetches an optional native binary for ESLint's import
-# resolver; it isn't needed for the app or builds. Listing it keeps EAS's strict pnpm happy.
+# resolver; nothing in the app or the iOS build needs it. pnpm 11+ (what EAS runs) fails the
+# install on unapproved build scripts, so decline it explicitly.
+# pnpm 11+:
+allowBuilds:
+  unrs-resolver: false
+# pnpm 10:
 ignoredBuiltDependencies:
   - unrs-resolver
