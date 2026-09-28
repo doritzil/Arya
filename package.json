@@ -19,6 +19,7 @@
     "@expo-google-fonts/outfit": "^0.4.3",
     "drizzle-orm": "^0.45.3",
     "expo": "~57.0.25",
+    "expo-audio": "~57.0.5",
     "expo-blur": "~57.0.3",
     "expo-constants": "~57.0.19",
     "expo-document-picker": "~57.0.2",

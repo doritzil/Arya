@@ -4,9 +4,11 @@
  *  - recording: `level` at 20 Hz with a phrase-shaped envelope, a quiet stretch now and then
  *    (→ `inputWarning` 'quiet' after 1.5 s, cleared after 0.5 s of playing), count-in beats,
  *    the 9:30 warning / 10:00 auto-stop.
- *  - player: a clock advanced by setInterval (10 Hz `clock` events) honouring rate, loop and seek.
+ *  - player: a clock advanced by setInterval (10 Hz `clock` events) honouring rate, loop and seek;
+ *    `url` sources (Apple Music previews) also play real audio through expo-audio (fallbackSound.ts).
  */
 import { MockEmitter } from './emitter';
+import { createFallbackSound, type FallbackSound } from './fallbackSound';
 import type {
   AriaAudioApi,
   AriaAudioEvents,
@@ -57,6 +59,7 @@ export interface AriaAudioMock extends AriaAudioApi {
 
 export function createAriaAudioMock(): AriaAudioMock {
   const emitter = new MockEmitter<AriaAudioEvents>();
+  let sound: FallbackSound | null = null;
   let inputs = MOCK_INPUTS.map((i) => ({ ...i }));
   const durations = new Map<string, number>(); // file → duration of mock recordings/imports
   let permission: 'granted' | 'denied' | 'undetermined' = 'undetermined';
@@ -280,6 +283,9 @@ export function createAriaAudioMock(): AriaAudioMock {
 
     async load(source) {
       stopTimer();
+      sound?.remove();
+      // Remote previews make real sound through expo-audio; everything else stays a silent clock.
+      sound = source.kind === 'url' ? createFallbackSound(source.url) : null;
       await new Promise((r) => setTimeout(r, 50));
       player.duration = durationFor(source);
       player.position = 0;
@@ -292,12 +298,15 @@ export function createAriaAudioMock(): AriaAudioMock {
       if (player.status === 'ended') player.position = 0;
       player.status = 'playing';
       player.lastTick = now();
+      sound?.seek(player.position);
+      sound?.play();
       stopTimer();
       player.timer = setInterval(tickPlayer, 1000 / CLOCK_HZ);
       emitClock();
     },
     pause() {
       if (player.status !== 'playing') return;
+      sound?.pause();
       tickPlayer();
       stopTimer();
       player.status = 'paused';
@@ -306,19 +315,24 @@ export function createAriaAudioMock(): AriaAudioMock {
     seek(sec) {
       player.position = Math.max(0, Math.min(sec, player.duration));
       player.lastTick = now();
+      sound?.seek(player.position);
       if (player.status === 'ended') player.status = 'paused';
       emitClock();
     },
     setLoop(on) {
       player.loop = on;
+      sound?.setLoop(on);
     },
     setRate(rate) {
       if (player.status === 'playing') tickPlayer();
       player.rate = Math.max(0.25, Math.min(2, rate));
+      sound?.setRate(player.rate);
       emitClock();
     },
     unload() {
       stopTimer();
+      sound?.remove();
+      sound = null;
       Object.assign(player, { status: 'idle', duration: 0, position: 0 });
       emitClock();
     },

@@ -2,7 +2,7 @@ import { View } from 'react-native';
 
 import { useLibrary } from '@/data/store';
 import type { CatalogSong } from '@/data/types';
-import { useIsPlaying, usePlayback, useProgress } from '@/playback/coordinator';
+import { useIsPlaying, usePlayback, usePlaybackError, useProgress } from '@/playback/coordinator';
 import { radius, space, useTheme } from '@/theme';
 import { Button } from '@/ui/Button';
 import { Difficulty } from '@/ui/Chips';
@@ -17,9 +17,10 @@ import { Text } from '@/ui/Text';
  * navigates; Want to learn toggles to "Added to Learning"; ✕ removes it and counts as not interested.
  */
 export function RecommendationCard({ song }: { song: CatalogSong }) {
-  const key = `preview:${song.catalogId}`;
+  const key = `song:${song.catalogId}`;
   const playing = useIsPlaying(key);
   const progress = useProgress(key);
+  const error = usePlaybackError(key);
   const toggle = usePlayback((s) => s.toggle);
   const wanted = useLibrary((s) => s.songs.some((x) => x.catalogId === song.catalogId));
   const want = useLibrary((s) => s.want);
@@ -45,11 +46,23 @@ export function RecommendationCard({ song }: { song: CatalogSong }) {
           playing={playing}
           label={`${playing ? 'Pause' : 'Play'} ${song.title}`}
           onPress={() =>
-            toggle({ kind: 'preview', key, title: song.title, url: song.previewUrl, durationSec: 30 })
+            toggle({
+              kind: 'song',
+              key,
+              title: song.title,
+              artist: song.artist,
+              appleMusicId: song.appleMusicId,
+              previewUrl: song.previewUrl,
+            })
           }
         />
       </View>
       {playing || progress > 0 ? <ProgressLine value={progress} /> : null}
+      {error ? (
+        <Text variant="footnote" color="warning" accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space[2] }}>
         <Button
           size="small"

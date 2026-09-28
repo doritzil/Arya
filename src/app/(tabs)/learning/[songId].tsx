@@ -60,10 +60,15 @@ export default function SongPage() {
   } else {
     player = {
       eyebrow: `Original · ${song.artist}`,
-      subtitle: song.appleMusicId ? 'Apple Music' : 'Full song · Apple Music',
-      source: song.appleMusicId
-        ? { kind: 'appleMusic', key: `am:${song.id}`, title: song.title, appleMusicId: song.appleMusicId, durationSec: song.durationSec }
-        : { kind: 'preview', key: `preview:${song.catalogId ?? song.id}`, title: song.title, url: song.previewUrl, durationSec: song.durationSec },
+      subtitle: 'Apple Music',
+      source: {
+        kind: 'song',
+        key: `song:${song.catalogId ?? song.id}`,
+        title: song.title,
+        artist: song.artist,
+        appleMusicId: song.appleMusicId,
+        previewUrl: song.previewUrl,
+      },
       duration: song.durationSec ?? 30,
     };
   }

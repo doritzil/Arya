@@ -43,13 +43,18 @@ export default function FirstSongs() {
         From {genres} · {levelName(lo as 1)}
         {hi !== lo ? ` to ${levelName(hi as 1)}` : ''}
       </Text>
-      <View style={{ gap: space[3], marginTop: space[5] }}>
-        {feed.slice(0, 2).map((s) => (
+      <Text variant="footnote" color="inkMuted" style={{ marginTop: space[2] }}>
+        Chosen from the genres you picked, at about your level
+        {prefs.appleMusicHistoryEnabled ? ', and nudged toward what you listen to on Apple Music' : ''}. Tap play to hear
+        one.
+      </Text>
+      <View style={{ gap: space[3], marginTop: space[4] }}>
+        {feed.map((s) => (
           <RecommendationCard key={s.catalogId} song={s} />
         ))}
       </View>
       <Text variant="footnote" color="inkMuted" align="center" style={{ marginTop: space[4] }}>
-        Tap play to hear a song. Want to learn adds it to your list.
+        Want to learn adds a song to your list. You&apos;ll find all of these in Discover too.
       </Text>
     </Screen>
   );

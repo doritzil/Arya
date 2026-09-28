@@ -25,6 +25,9 @@ interface LibraryState {
   feed: CatalogSong[];
   /** Catalog ids the user dismissed or said they know — excluded from the feed. */
   hidden: Set<string>;
+  /** On-device Apple Music listening weights (FR-27); empty unless the user connected Apple Music. */
+  genreWeights: Partial<Record<PickableGenre, number>>;
+  setGenreWeights(w: Partial<Record<PickableGenre, number>>): void;
 
   hydrate(): Promise<void>;
   setPrefs(patch: Partial<Prefs>): void;
@@ -58,6 +61,12 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   projects: [],
   feed: [],
   hidden: new Set(),
+  genreWeights: {},
+
+  setGenreWeights(genreWeights) {
+    set({ genreWeights });
+    get().refreshFeed();
+  },
 
   async hydrate() {
     const data = await getRepo().load();
@@ -77,7 +86,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   refreshFeed() {
-    const { prefs, songs, hidden } = get();
+    const { prefs, songs, hidden, genreWeights } = get();
     const exclude = new Set([...hidden, ...songs.flatMap((s) => (s.catalogId ? [s.catalogId] : []))]);
     const learnedLevels = songs.filter((s) => s.status === 'learned').map((s) => s.difficulty);
     const feed = rankRecommendations(SEED_CATALOG, {
@@ -85,6 +94,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
       level: prefs.level,
       exclude,
       learnedLevels,
+      genreWeights,
       limit: 20,
     }).map((r) => r.song);
     set({ feed });

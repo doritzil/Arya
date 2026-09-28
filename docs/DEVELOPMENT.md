@@ -36,9 +36,9 @@ get a fresh install and onboarding). Every native module falls back to a JS mock
 
 | Module | Mock behaviour |
 |---|---|
-| `aria-audio` | Mic permission granted; realistic level meter with occasional "too quiet"; a player clock that honours loop/rate/seek (no sound) |
+| `aria-audio` | Mic permission granted; realistic level meter with occasional "too quiet"; a player clock that honours loop/rate/seek. **Apple Music previews play real audio** (through expo-audio, which Expo Go includes); recordings and the piano are silent |
 | `aria-transcriber` | "Transcribes" any take in ~4 s into an 8-bar C-major demo piece |
-| `aria-musickit` | Subscriber; every track 3:30 |
+| `aria-musickit` | Not used for playback — without the native module, songs play the 30-second preview. The Apple Music toggle explains it can't connect |
 | `aria-icloud` | Unavailable |
 
 The web preview is for layout and flows only — it is not a shipping target.
@@ -90,9 +90,10 @@ Generated files — don't edit by hand: `src/theme/tokens.generated.ts` (`pnpm g
 4. **Licence gates:** Verovio (LGPL-3.0, used in `ScoreView`), model weights / MAESTRO. Decide before TestFlight.
 5. **Curated MIDI** for public-domain pieces (`catalog-midi/*.mid`) + a MIDI → RawNotes reader; until then
    Keyboard mode's "score" source uses a generated demo piece.
-6. **reco-api** (Cloudflare Worker + D1, §9): catalog, Apple Music previews/IDs, feedback outbox flush.
-   Previews currently play as silent 30-second clocks.
-7. **Apple Music full playback** (`aria-musickit`) is built but not yet routed by the PlaybackCoordinator.
+6. **reco-api** (Cloudflare Worker + D1, §9): catalog, Apple Music IDs, feedback outbox flush. Until then the app
+   looks songs up with Apple's public iTunes Search API (`src/services/appleMusic.ts`) for preview URLs and IDs.
+7. **Apple Music full playback** is routed (subscribers + permission + dev build → MusicKit; everyone else → preview)
+   but untested on a device.
 8. **Not designed yet:** Library (built from existing patterns), Settings, rename/duplicate/delete takes, empty and
    error states beyond the basics.
 9. **iCloud sync** — skeleton only; off by default.

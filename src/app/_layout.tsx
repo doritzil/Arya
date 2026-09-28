@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useLibrary } from '@/data/store';
 import { recoverAfterLaunch } from '@/features/record/session';
+import { listeningWeights } from '@/services/listening';
 import { ThemeProvider, useAriaFonts, useTheme } from '@/theme';
 import { Background } from '@/ui/Background';
 
@@ -21,6 +22,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     hydrate()
+      .then(() => {
+        const { prefs, setGenreWeights } = useLibrary.getState();
+        if (prefs.appleMusicHistoryEnabled) listeningWeights().then(setGenreWeights).catch(() => {});
+      })
       .then(recoverAfterLaunch)
       .catch((e) => console.warn('[library] hydrate failed', e));
   }, [hydrate]);

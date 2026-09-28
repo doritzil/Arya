@@ -1,6 +1,6 @@
 import { Pressable, View } from 'react-native';
 
-import { usePlayback, type Source } from '@/playback/coordinator';
+import { usePlayback, usePlaybackError, usePlaybackMode, type Source } from '@/playback/coordinator';
 import { space } from '@/theme';
 import { Icon, type IconName } from '@/ui/Icon';
 import { PlayDisc } from '@/ui/PlayDisc';
@@ -19,7 +19,6 @@ export function NowPlaying({
   source,
   fallbackDuration,
   seed,
-  preview,
 }: {
   eyebrow: string;
   title: string;
@@ -27,7 +26,6 @@ export function NowPlaying({
   source: Source;
   fallbackDuration: number;
   seed: number;
-  preview?: boolean;
 }) {
   const active = usePlayback((s) => s.source?.key === source.key);
   const status = usePlayback((s) => s.status);
@@ -36,6 +34,8 @@ export function NowPlaying({
   const loop = usePlayback((s) => s.loop);
   const { toggle, seek, skipBack, setLoop, play } = usePlayback.getState();
   const playing = active && (status === 'playing' || status === 'loading');
+  const mode = usePlaybackMode(source.key);
+  const error = usePlaybackError(source.key);
 
   return (
     <View style={{ alignItems: 'stretch', gap: space[2] }}>
@@ -56,9 +56,14 @@ export function NowPlaying({
         duration={duration}
         onSeek={(s) => (active ? seek(s) : play(source).then(() => seek(s)))}
       />
-      {preview ? (
-        <Text variant="footnote" color="warning" align="center">
+      {mode === 'preview' ? (
+        <Text variant="footnote" color="warning" align="center" accessibilityLiveRegion="polite">
           Preview · the full song plays in Apple Music
+        </Text>
+      ) : null}
+      {error ? (
+        <Text variant="footnote" color="warning" align="center" accessibilityLiveRegion="polite">
+          {error}
         </Text>
       ) : null}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginTop: space[3] }}>

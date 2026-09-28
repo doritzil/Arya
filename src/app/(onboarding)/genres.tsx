@@ -6,6 +6,7 @@ import { useLibrary } from '@/data/store';
 import { GENRES, type PickableGenre } from '@/data/types';
 import { pickedLabel } from '@/features/onboarding/pickedLabel';
 import { Progress } from '@/features/onboarding/Progress';
+import { connectAppleMusic } from '@/services/listening';
 import { space, useTheme } from '@/theme';
 import { Button } from '@/ui/Button';
 import { GenreChip } from '@/ui/Chips';
@@ -19,6 +20,33 @@ export default function Genres() {
   const prefs = useLibrary((s) => s.prefs);
   const setPrefs = useLibrary((s) => s.setPrefs);
   const [picked, setPicked] = useState<PickableGenre[]>(prefs.genres);
+  const setGenreWeights = useLibrary((s) => s.setGenreWeights);
+  const [amNote, setAmNote] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState(false);
+  // FR-27: turning this on asks iOS for Apple Music access; only genre weights are used, on the phone.
+  const onAppleMusic = async (on: boolean) => {
+    setAmNote(null);
+    if (!on) {
+      setPrefs({ appleMusicHistoryEnabled: false });
+      setGenreWeights({});
+      return;
+    }
+    setConnecting(true);
+    const r = await connectAppleMusic();
+    setConnecting(false);
+    if (r.ok) {
+      setPrefs({ appleMusicHistoryEnabled: true });
+      setGenreWeights(r.weights);
+      setAmNote('Connected — your picks will lean toward what you listen to.');
+    } else {
+      setPrefs({ appleMusicHistoryEnabled: false });
+      setAmNote(
+        r.reason === 'unavailable'
+          ? "Apple Music can't connect in this preview build. It works in the full Aria app."
+          : 'Apple Music access is off. You can turn it on in Settings › Privacy › Media & Apple Music.',
+      );
+    }
+  };
   const toggle = (g: PickableGenre) =>
     setPicked((p) => (p.includes(g) ? p.filter((x) => x !== g) : [...p, g]));
 
@@ -65,12 +93,18 @@ export default function Genres() {
         </View>
         <Switch
           value={prefs.appleMusicHistoryEnabled}
-          onValueChange={(v) => setPrefs({ appleMusicHistoryEnabled: v })}
+          disabled={connecting}
+          onValueChange={onAppleMusic}
           trackColor={{ true: colors.accent, false: colors.track }}
           thumbColor={colors.keyWhite}
           accessibilityLabel="Use my Apple Music listening"
         />
       </Glass>
+      {amNote ? (
+        <Text variant="footnote" color="inkMuted" style={{ marginTop: space[2] }} accessibilityLiveRegion="polite">
+          {amNote}
+        </Text>
+      ) : null}
     </Screen>
   );
 }
