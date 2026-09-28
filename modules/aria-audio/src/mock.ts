@@ -60,6 +60,7 @@ export interface AriaAudioMock extends AriaAudioApi {
 export function createAriaAudioMock(): AriaAudioMock {
   const emitter = new MockEmitter<AriaAudioEvents>();
   let sound: FallbackSound | null = null;
+  let loadToken: object | null = null;
   let inputs = MOCK_INPUTS.map((i) => ({ ...i }));
   const durations = new Map<string, number>(); // file → duration of mock recordings/imports
   let permission: 'granted' | 'denied' | 'undetermined' = 'undetermined';
@@ -284,9 +285,22 @@ export function createAriaAudioMock(): AriaAudioMock {
     async load(source) {
       stopTimer();
       sound?.remove();
+      sound = null;
       // Remote previews make real sound through expo-audio; everything else stays a silent clock.
-      sound = source.kind === 'url' ? createFallbackSound(source.url) : null;
-      await new Promise((r) => setTimeout(r, 50));
+      if (source.kind === 'url') {
+        const token = {};
+        loadToken = token;
+        const created = await createFallbackSound(source.url, (message) => {
+          if (loadToken !== token) return; // a newer source replaced this one
+          stopTimer();
+          player.status = 'ended';
+          emitClock();
+          emitter.emit('playerError', { message });
+        });
+        sound = created;
+      } else {
+        await new Promise((r) => setTimeout(r, 50));
+      }
       player.duration = durationFor(source);
       player.position = 0;
       player.status = 'paused';

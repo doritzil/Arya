@@ -19,7 +19,7 @@ public final class AriaAudioModule: Module {
   public func definition() -> ModuleDefinition {
     Name("AriaAudio")
 
-    Events("level", "inputWarning", "interruption", "clock", "routeChange", "countInBeat", "recordingStatus")
+    Events("level", "inputWarning", "interruption", "clock", "routeChange", "countInBeat", "recordingStatus", "playerError")
 
     OnCreate {
       self.setUp()

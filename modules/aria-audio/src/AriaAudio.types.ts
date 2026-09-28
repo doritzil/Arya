@@ -144,6 +144,10 @@ export interface RecordingStatusEvent {
   elapsedSec: number;
 }
 
+export interface PlayerErrorEvent {
+  message: string;
+}
+
 export interface AriaAudioEvents {
   level: LevelEvent;
   inputWarning: InputWarningEvent;
@@ -152,6 +156,8 @@ export interface AriaAudioEvents {
   routeChange: RouteChangeEvent;
   countInBeat: CountInBeatEvent;
   recordingStatus: RecordingStatusEvent;
+  /** The loaded source can't be played (stream failed or never loaded). */
+  playerError: PlayerErrorEvent;
 }
 
 export type AriaAudioEventName = keyof AriaAudioEvents;

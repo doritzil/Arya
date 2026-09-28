@@ -62,7 +62,13 @@ export const usePlayback = create<PlaybackState>((set, get) => {
   };
   const wire = () => {
     if (subs.length) return;
-    subs = [Audio.addListener('clock', onClock('audio')), MusicKit.addListener('clock', onClock('musickit'))];
+    subs = [
+      Audio.addListener('clock', onClock('audio')),
+      MusicKit.addListener('clock', onClock('musickit')),
+      Audio.addListener('playerError', ({ message }) => {
+        if (get().source && backend === 'audio') set({ status: 'error', error: message });
+      }),
+    ];
   };
   const stopBackend = () => (backend === 'musickit' ? MusicKit.pause() : Audio.pause());
 
