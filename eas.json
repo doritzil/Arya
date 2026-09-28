@@ -4,21 +4,28 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "pnpm": "10.33.0",
+      "node": "22.22.2"
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
         "resourceClass": "m-medium"
-      }
+      },
+      "extends": "base"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "extends": "base"
     },
     "production": {
       "autoIncrement": true,
       "ios": {
         "resourceClass": "m-medium"
-      }
+      },
+      "extends": "base"
     }
   },
   "submit": {

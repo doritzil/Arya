@@ -1,3 +1,8 @@
 packages:
   - packages/*
   - modules/*
+
+# unrs-resolver's install script only fetches an optional native binary for ESLint's import
+# resolver; it isn't needed for the app or builds. Listing it keeps EAS's strict pnpm happy.
+ignoredBuiltDependencies:
+  - unrs-resolver
