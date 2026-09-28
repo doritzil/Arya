@@ -4,7 +4,7 @@
  *
  * On iOS, MusicKit needs NO entitlement and no developer token in the app: the system mints the token from
  * the App ID. What IS required, outside this repo:
- *   1. Apple developer portal → Certificates, Identifiers & Profiles → Identifiers → com.doritlz.arya →
+ *   1. Apple developer portal → Certificates, Identifiers & Profiles → Identifiers → com.arya.piano →
  *      "App Services" tab → enable **MusicKit**. (Without it, catalog requests fail with a token error.)
  *   2. Regenerate / re-download provisioning profiles is NOT needed for this (it's an App Service, not a
  *      capability), but EAS-managed credentials are unaffected either way.
