@@ -1,0 +1,25 @@
+# Builds the App Store version and uploads it to TestFlight.
+# Runs when the `release/testflight` branch is pushed (ask Claude to "ship to TestFlight").
+# Needs: GitHub linked to the Expo project, an App Store Connect API key in EAS credentials,
+# and `submit.production.ios.ascAppId` set in eas.json.
+name: TestFlight
+
+on:
+  push:
+    branches: ['release/testflight']
+
+jobs:
+  build_ios:
+    name: Build iOS (production)
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  submit_ios:
+    name: Upload to TestFlight
+    needs: [build_ios]
+    type: submit
+    params:
+      platform: ios
+      build_id: ${{ needs.build_ios.outputs.build_id }}

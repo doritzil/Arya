@@ -7,16 +7,18 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "ios": { "resourceClass": "m-medium" },
-      "channel": "development"
+      "ios": {
+        "resourceClass": "m-medium"
+      }
     },
     "preview": {
-      "distribution": "internal",
-      "channel": "preview"
+      "distribution": "internal"
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production"
+      "ios": {
+        "resourceClass": "m-medium"
+      }
     }
   },
   "submit": {
