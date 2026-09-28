@@ -211,6 +211,7 @@ Size check: 10 min × 48 kHz × 16-bit mono PCM ≈ 58 MB while recording; ALAC 
 ```ts
 songs            id (pk, uuid) · appleMusicId? · catalogId? (reco-api) · title · artist · genre · difficulty (1–5)
                  · status: 'learning'|'learned' · addedAt · learnedAt? · favourite (bool) · previewUrl? · durationSec?
+                 · midiPath? (curated public-domain MIDI, downloaded on want/add — unlocks Keyboard mode for the Original, §6.6)
 projects         id (pk) · kind · songId? (fk songs) · name · createdAt · updatedAt · durationSec
                  · transcriptionStatus: 'none'|'queued'|'running'|'done'|'failed' · hasEdits · folderPath
                  -- mirror of manifest.json for fast lists/search; rebuilt on scan
@@ -301,6 +302,48 @@ interface PlaybackState { source?: Source; status: 'idle'|'loading'|'playing'|'p
 - Tab bar hidden on recording/transcribing/edit/keyboard routes (they live outside `(tabs)` or set `tabBarStyle: none`).
 - Keyboard mode unlocks landscape on focus and relocks portrait on blur; dark theme forced for that route.
 - Transcribing screen can be left (handoff): the job lives in a store + native module, not the screen; a pill on the Recordings card shows progress and a local notification fires when done if backgrounded.
+
+### 6.6 Keyboard mode
+
+**Availability (product decision, Sep 28 2026).** Apple Music audio is DRM-protected, so we can't transcribe the original, and v1 has no licensed arrangements. Keyboard mode needs note data, so the song page derives one of three states:
+
+```ts
+type KeyboardAvailability =
+  | { state: 'original'; midiPath: string }          // public-domain piece with curated MIDI (songs.midiPath)
+  | { state: 'myNotes'; projectId: string }          // ≥ 1 recording of this song with transcriptionStatus = 'done'
+  | { state: 'locked' };                             // neither
+```
+
+- **Unlocks on notes, not on recording.** A take that is still transcribing, was cancelled or failed does not unlock it.
+- **Locked state is dimmed, not disabled.** The Keyboard mode row keeps its layout at reduced emphasis (`ink-muted` text, no chevron). Its subtitle reads "Record yourself to see it on the keys". Tapping it opens **Get ready** for this song. It stays a real button for VoiceOver: "Keyboard mode. Record yourself to see this song on the keys." While a take is transcribing, the subtitle reads "Your notes are on the way…".
+- **Which notes play.** If the song page's source switch is on *My notes* or *Recordings*, use that selected recording. Otherwise use the most recent transcribed take. The keyboard header names the source ("Clair de Lune · My notes · Sep 24" / "· Original").
+- **Discover/Search cards** don't advertise Keyboard mode for songs without `midiPath`. Curated public-domain pieces get a small "Keys available" marker.
+
+**Data.** `toFallNotes(score, beatMap)` in score-engine turns the edited ScoreModel into `{pitch, startSec, endSec, hand, bar}[]`, sorted by start time. The hand comes from the staff split (FR-12): treble is the right hand (peach), bass is the left hand (orchid). Beats go through the beat map to seconds, so the falling notes line up with the audio (synth or the take itself, rubato included) while matching the score. For curated MIDI, track or channel assignment gives the hand, falling back to the hand-split heuristic.
+
+**Rendering (Skia, UI thread).**
+- On load, all note bars are drawn into Skia `Picture`s, one per 8 bars. Each frame only translates the visible pictures by the clock (§6.4), so the per-frame cost doesn't depend on note count.
+- Lit keys: each frame, a binary search over the sorted notes finds the ones sounding now. Their keys are filled in the hand's colour and show the note name.
+- Target: 60 fps on iPhone 12, 120 fps on ProMotion.
+
+**Sync.** Visual time = clock position − `AVAudioSession.outputLatency` (reported in `clock` events and on route change). This matters because Bluetooth headphones add ~150–250 ms. Playback starts one fall-height early so the first notes enter from the top.
+
+**Range.**
+- The range fits the piece: the lowest and highest pitch, widened to the nearest C and E, never less than 2½ octaves.
+- Up to ~4 octaves fits the landscape width. Keys are display-only, so they have no 44 pt minimum.
+- For wider pieces, the visible range eases to follow the notes of the next few bars.
+
+**Controls.**
+- Left rail: play/pause, back 5 s and loop, all through the PlaybackCoordinator. Loop covers the whole piece in v1; a bar-range loop via the beat map is a cheap follow-up.
+- Right rail: speed 40–120 %. The synth changes its sequencer rate. A take changes rate through an `AVAudioUnitTimePitch` in `aria-audio`, so pitch is kept. Fall speed is set in beats, so note spacing looks the same at any speed.
+- "Bar N of M" and the progress line read from the beat map and the clock.
+- The route locks landscape, forces dark, hides the status bar, keeps the screen awake (`expo-keep-awake`) and respects landscape safe areas.
+
+**Accessibility.**
+- The canvas exposes a live summary per bar ("Bar 12 of 72. Right hand E5, left hand C3.").
+- With Reduce Motion on, notes don't fall. Upcoming notes show as a static strip above the keys, and keys still light up.
+
+**Later.** Chord charts timed to the Apple Music recording would let keys play along over the real track (MusicKit position → the same clock). Licensed arrangements would play through the synth. Both slot in as new `KeyboardAvailability` states without changing the renderer.
 
 ---
 
@@ -472,13 +515,13 @@ Cloudflare Worker + D1 (SQLite) — cheap, no servers, fast globally. No account
 
 ```
 GET  /v1/recommendations?genres=pop,film&level=3&weights=<b64 genre weights>&exclude=<ids>&limit=20
-     → [{ catalogId, appleMusicId, title, artist, genre, difficulty, previewUrl, durationSec, reason }]
+     → [{ catalogId, appleMusicId, title, artist, genre, difficulty, previewUrl, durationSec, midiUrl?, reason }]
 POST /v1/feedback   { installId, events: [{ catalogId, action, at }] }          // batched outbox
 GET  /v1/search?q=…&level=…          → catalog + Apple Music search merged; items not in our catalog come back with difficulty: null
 GET  /v1/songs/:catalogId            → detail (incl. fresh preview URL)
 ```
 
-- **Catalog:** curated table of piano-playable songs `{catalogId, appleMusicId, title, artist/composer, genres[], difficulty 1–5, source, curatedBy}`. Start with ~500 hand-rated songs across the 12 onboarding genres (≥ 30/genre so ≥ 10 recommendations is always satisfiable), public-domain classical weighted in. Curation lives in `services/reco-api/catalog/*.csv` and is imported by script — reviewable in PRs.
+- **Catalog:** curated table of piano-playable songs `{catalogId, appleMusicId, title, artist/composer, genres[], difficulty 1–5, source, curatedBy, midiUrl?}`. `midiUrl` is set only for public-domain pieces with a checked, hand-separated MIDI file (e.g. from Mutopia or our own engraving), served from R2. Start with ~500 hand-rated songs across the 12 onboarding genres (≥ 30/genre so ≥ 10 recommendations is always satisfiable), public-domain classical weighted in. Curation lives in `services/reco-api/catalog/*.csv` and is imported by script — reviewable in PRs.
 - **Apple Music API:** the worker holds the MusicKit private key and mints developer tokens; resolves metadata, artwork-free fields and preview URLs; caches responses (KV, 24 h). Respect Apple Music API terms (attribution, previews only as previews, link to Apple Music).
 - **Ranking v1:** score = genre match (user genres + on-device listening weights) + difficulty fit (Gaussian around the chosen level, nudged by what they marked learned) + popularity prior − already seen/dismissed; diversity re-rank (max 3 per artist/genre in the top 10). Feedback from all installs updates a global "want-rate" prior per song. Deterministic and explainable (`reason` for debugging).
 - **Offline (FR-27):** the last feed is stored in `reco_cache`; feedback goes to `reco_feedback` and flushes when online. Discover shows the cached feed with "Updated <time>" when offline.
@@ -570,7 +613,7 @@ From the requirements and handoff, plus ones this spec raises. Recommended answe
 1. **"Already know" (FR-26)** removed from cards — *add it to a "…" menu on the card; the API already accepts `know`.*
 2. **Your level** onboarding step — *keep; it's the difficulty prior in ranking (§9.1).*
 3. **Song — recommended** page unreachable — *open it on card tap (not the play disc); cheap, reuses the song page.*
-4. **Keyboard mode for the Original** needs note data we don't have — *v1: only for My notes; show "Record yourself to see it on the keys" for the original.*
+4. ~~**Keyboard mode for the Original**~~ — **Decided:** locked (dimmed, taps through to Get ready) until the song has a transcribed take; unlocked from the start for public-domain pieces with curated MIDI. See §6.6.
 5. **PlayerBar** exists in `COMPONENTS.md` but the handoff says no floating mini-player — *drop PlayerBar for v1.*
 6. **Direct MIDI input** from digital pianos (open question in requirements) — *strong candidate for v1.1: CoreMIDI in `aria-audio` writes `notes.raw.json` directly and skips the model; zero pipeline changes downstream.*
 7. **Model licence outcome** — determines whether we can ship commercially at all; needed by end of Phase 0.
@@ -589,7 +632,7 @@ From the requirements and handoff, plus ones this spec raises. Recommended answe
 | Edit genres | `(modals)/edit-genres` | `prefs.genres` | `prefs`, invalidate recommendations |
 | Learning list | `(tabs)/learning` | `songs WHERE learning` + take counts | sort pref |
 | Song page | `(tabs)/learning/[songId]` | song, its projects | Coordinator (appleMusic/preview/recording/synth), `songs.status=learned`, `favourite` |
-| Keyboard mode | `(tabs)/learning/[songId]/keyboard` | score model (hands), clock | rate |
+| Keyboard mode | `(tabs)/learning/[songId]/keyboard` | `KeyboardAvailability` (§6.6), fall notes from score model or curated MIDI, clock | rate, loop |
 | Recordings | `(tabs)/record` | `projects` + FTS | swipe: rename/duplicate/delete |
 | New recording / Name idea / Get ready | `record/new`, `(modals)/name-idea`, `record/get-ready` | learning songs, inputs | project folder created, recording settings |
 | Recording | `record/recording` | level/warnings | `aria-audio` start/stop |
