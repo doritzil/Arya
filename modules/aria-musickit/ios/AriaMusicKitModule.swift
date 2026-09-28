@@ -35,7 +35,7 @@ public final class AriaMusicKitModule: Module {
       }
     }
 
-    AsyncFunction("requestAuthorization") { (promise: Promise) in
+    AsyncFunction("requestAuthorization") { (promise: Promise) -> Void in
       Task {
         let status = await MusicAuthorization.request()
         promise.resolve(Self.authString(status))
@@ -46,7 +46,7 @@ public final class AriaMusicKitModule: Module {
       Self.authString(MusicAuthorization.currentStatus)
     }
 
-    AsyncFunction("subscription") { (promise: Promise) in
+    AsyncFunction("subscription") { (promise: Promise) -> Void in
       Task {
         do {
           let sub = try await MusicSubscription.current
@@ -60,7 +60,7 @@ public final class AriaMusicKitModule: Module {
       }
     }
 
-    AsyncFunction("play") { (appleMusicId: String, promise: Promise) in
+    AsyncFunction("play") { (appleMusicId: String, promise: Promise) -> Void in
       Task { @MainActor in
         do {
           try await self.play(appleMusicId)
@@ -72,7 +72,7 @@ public final class AriaMusicKitModule: Module {
       }
     }
 
-    AsyncFunction("resume") { (promise: Promise) in
+    AsyncFunction("resume") { (promise: Promise) -> Void in
       Task { @MainActor in
         do {
           try await ApplicationMusicPlayer.shared.play()
@@ -83,11 +83,11 @@ public final class AriaMusicKitModule: Module {
       }
     }
 
-    Function("pause") {
+    Function("pause") { () -> Void in
       Task { @MainActor in ApplicationMusicPlayer.shared.pause() }
     }
 
-    Function("stop") {
+    Function("stop") { () -> Void in
       Task { @MainActor in
         ApplicationMusicPlayer.shared.stop()
         self.currentId = nil
@@ -96,26 +96,27 @@ public final class AriaMusicKitModule: Module {
       }
     }
 
-    Function("seek") { (sec: Double) in
+    Function("seek") { (sec: Double) -> Void in
       Task { @MainActor in
         ApplicationMusicPlayer.shared.playbackTime = max(0, sec)
         self.emitClock()
       }
     }
 
-    Function("setRepeat") { (on: Bool) in
+    Function("setRepeat") { (on: Bool) -> Void in
       Task { @MainActor in
-        ApplicationMusicPlayer.shared.state.repeatMode = on ? .one : MusicPlayer.RepeatMode.none
+        // `MusicPlayer` alone is ambiguous with AudioToolbox's C type of the same name.
+        ApplicationMusicPlayer.shared.state.repeatMode = on ? MusicKit.MusicPlayer.RepeatMode.one : MusicKit.MusicPlayer.RepeatMode.none
       }
     }
 
-    AsyncFunction("listeningGenreWeights") { (promise: Promise) in
+    AsyncFunction("listeningGenreWeights") { (promise: Promise) -> Void in
       Task {
         promise.resolve(await Self.genreWeights())
       }
     }
 
-    Function("openInAppleMusic") { (appleMusicId: String) in
+    Function("openInAppleMusic") { (appleMusicId: String) -> Void in
       Task { @MainActor in
         var url = URL(string: "https://music.apple.com/song/\(appleMusicId)")
         if let song = try? await Self.fetchSong(appleMusicId), let songURL = song.url { url = songURL }
@@ -141,10 +142,13 @@ public final class AriaMusicKitModule: Module {
   static func fetchSong(_ id: String) async throws -> Song {
     let request = MusicCatalogResourceRequest<Song>(matching: \.id, equalTo: MusicItemID(id))
     let response = try await request.response()
-    guard let song = response.items.first else {
-      throw Exception(name: "NotFound", description: "No Apple Music song \(id)", code: "ERR_NOT_FOUND")
-    }
+    guard let song = response.items.first else { throw SongNotFound(id: id) }
     return song
+  }
+
+  struct SongNotFound: LocalizedError {
+    let id: String
+    var errorDescription: String? { "No Apple Music song \(id)" }
   }
 
   @MainActor
@@ -153,7 +157,7 @@ public final class AriaMusicKitModule: Module {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] _ in
         // objectWillChange fires before the value changes; read on the next runloop turn.
-        DispatchQueue.main.async { self?.handleStateChange() }
+        Task { @MainActor in self?.handleStateChange() }
       }
   }
 
@@ -248,7 +252,7 @@ public final class AriaMusicKitModule: Module {
     }
   }
 
-  static func statusString(_ s: MusicPlayer.PlaybackStatus, position: TimeInterval, duration: Double) -> String {
+  static func statusString(_ s: MusicKit.MusicPlayer.PlaybackStatus, position: TimeInterval, duration: Double) -> String {
     switch s {
     case .playing, .seekingForward, .seekingBackward: return "playing"
     case .paused, .interrupted: return "paused"
