@@ -65,7 +65,7 @@ public final class AriaTranscriberModule: Module {
       return ["jobId": jobId]
     }
 
-    Function("cancel") { (jobId: String) in
+    Function("cancel") { (jobId: String) -> Void in
       self.lock.lock()
       let job = self.jobs[jobId]
       self.lock.unlock()

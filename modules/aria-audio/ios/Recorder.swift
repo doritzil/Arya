@@ -38,6 +38,10 @@ final class Recorder {
   private(set) var countInEndSec: Double = 0
   private(set) var sampleRate: Double = 48000
   private let lock = NSLock()
+  /// Mono float scratch buffer for downmixing multi-channel inputs. Only touched on the tap thread. Kept as a
+  /// property (not a captured local `var`) because the tap block may be `@Sendable` in newer SDKs, where
+  /// mutating a captured var is a compile error.
+  private var mono = [Float](repeating: 0, count: 8192)
 
   init(projectDir: URL, maxDurationSec: Double, callbackQueue: DispatchQueue) {
     self.projectDir = projectDir
@@ -78,14 +82,12 @@ final class Recorder {
       }
     }
 
-    // Mono float scratch buffer for downmixing multi-channel inputs.
-    var mono = [Float](repeating: 0, count: 8192)
     input.installTap(onBus: 0, bufferSize: 2048, format: hwFormat) { [weak self] buffer, _ in
       guard let self, let data = buffer.floatChannelData else { return }
       let n = Int(buffer.frameLength)
       let channels = Int(buffer.format.channelCount)
-      if mono.count < n { mono = [Float](repeating: 0, count: n) }
-      mono.withUnsafeMutableBufferPointer { out in
+      if self.mono.count < n { self.mono = [Float](repeating: 0, count: n) }
+      self.mono.withUnsafeMutableBufferPointer { out in
         if channels == 1 {
           out.baseAddress!.update(from: data[0], count: n)
         } else {
@@ -96,7 +98,7 @@ final class Recorder {
             out[i] = sum * scale
           }
         }
-        self.consume(out.baseAddress!, count: n)
+        self.consumeSamples(out.baseAddress!, count: n)
       }
     }
 
@@ -108,7 +110,7 @@ final class Recorder {
     onStatus?("recording", 0)
   }
 
-  private func consume(_ samples: UnsafePointer<Float>, count: Int) {
+  private func consumeSamples(_ samples: UnsafePointer<Float>, count: Int) {
     lock.lock()
     defer { lock.unlock() }
     guard !stopped, let writer, let meter else { return }

@@ -27,7 +27,7 @@ public final class AriaICloudModule: Module {
     }
     .runOnQueue(queue)
 
-    AsyncFunction("setEnabled") { (on: Bool, projectsDir: String) in
+    AsyncFunction("setEnabled") { (on: Bool, projectsDir: String) -> Void in
       self.enabled = on
       if on {
         DispatchQueue.main.async { self.startWatching() }

@@ -45,8 +45,12 @@ final class AudioSessionController {
   func activate(for use: SessionUse) throws {
     var options: AVAudioSession.CategoryOptions = [.defaultToSpeaker, .allowBluetoothA2DP]
     if bluetoothMicAllowed {
-      // Renamed `.allowBluetoothHFP` in the iOS 26 SDK; the old name still compiles (deprecated).
+      // Renamed `.allowBluetoothHFP` in the iOS 26 SDK (same raw value); the old name is deprecated there.
+#if compiler(>=6.2) // Xcode 26
+      options.insert(.allowBluetoothHFP)
+#else
       options.insert(.allowBluetooth)
+#endif
     }
     let mode: AVAudioSession.Mode = use == .recording ? .measurement : .default
     if session.category != .playAndRecord || session.mode != mode || session.categoryOptions != options {
@@ -176,12 +180,13 @@ final class AudioSessionController {
           let type = AVAudioSession.InterruptionType(rawValue: raw)
     else { return }
     var reason = "call" // `.default` covers calls, alarms, Siri — iOS doesn't tell them apart
-    if let r = info[AVAudioSessionInterruptionReasonKey] as? UInt,
-       let why = AVAudioSession.InterruptionReason(rawValue: r) {
-      switch why {
-      case .builtInMicMuted: reason = "other"
-      default:
-        if #available(iOS 17.0, *), why == .routeDisconnected { reason = "route" }
+    // Raw values: 2 = builtInMicMuted, 4 = routeDisconnected. The enum case for the latter is not
+    // available on iOS in every SDK, so compare numbers rather than risk a compile error.
+    if let r = info[AVAudioSessionInterruptionReasonKey] as? UInt {
+      switch r {
+      case 2: reason = "other"
+      case 4: reason = "route"
+      default: break
       }
     }
     onInterruption?(type == .began, reason)

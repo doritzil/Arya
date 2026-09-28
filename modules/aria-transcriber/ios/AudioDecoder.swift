@@ -17,17 +17,19 @@ final class AudioDecoder {
   init(url: URL, targetRate: Double) throws {
     self.url = url
     self.targetRate = targetRate
-    file = try AVAudioFile(forReading: url)
-    inFormat = file.processingFormat
+    let f = try AVAudioFile(forReading: url)
+    let inF = f.processingFormat
     guard let out = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: targetRate, channels: 1, interleaved: false),
-          let conv = AVAudioConverter(from: inFormat, to: out)
-    else { throw TranscriberError.decode("Unsupported audio format \(inFormat)") }
+          let conv = AVAudioConverter(from: inF, to: out)
+    else { throw TranscriberError.decode("Unsupported audio format \(inF)") }
+    // Downmix stereo → mono by averaging rather than taking the left channel.
+    if inF.channelCount == 2 { conv.channelMap = [0] }
+    conv.sampleRateConverterQuality = AVAudioQuality.high.rawValue
+    file = f
+    inFormat = inF
     outFormat = out
     converter = conv
-    // Downmix stereo → mono by averaging rather than taking the left channel.
-    if inFormat.channelCount == 2 { converter.channelMap = [0] }
-    converter.sampleRateConverterQuality = AVAudioQuality.high.rawValue
-    durationSec = Double(file.length) / inFormat.sampleRate
+    durationSec = Double(f.length) / inF.sampleRate
   }
 
   /// `seconds` of audio starting at `startSec`, zero-padded if the file ends first.
@@ -46,31 +48,32 @@ final class AudioDecoder {
           let outBuf = AVAudioPCMBuffer(pcmFormat: outFormat, frameCapacity: AVAudioFrameCount(Double(inCapacity) * targetRate / inFormat.sampleRate) + 1024)
     else { throw TranscriberError.decode("Out of memory") }
 
-    var endOfInput = false
-    var readError: Error?
-    while out.count < wanted && !endOfInput {
+    // Reference box instead of captured `var`s: the input block may be imported as @Sendable, where
+    // mutating a captured local is a hard error.
+    let state = DecoderInputState()
+    while out.count < wanted && !state.endOfInput {
       outBuf.frameLength = 0
       var convError: NSError?
       let status = converter.convert(to: outBuf, error: &convError) { _, inputStatus in
-        if endOfInput {
+        if state.endOfInput {
           inputStatus.pointee = .endOfStream
           return nil
         }
         if self.file.framePosition >= self.file.length {
-          endOfInput = true
+          state.endOfInput = true
           inputStatus.pointee = .endOfStream
           return nil
         }
         do {
           try self.file.read(into: inBuf, frameCount: inCapacity)
         } catch {
-          readError = error
+          state.readError = error
           inputStatus.pointee = .endOfStream
-          endOfInput = true
+          state.endOfInput = true
           return nil
         }
         if inBuf.frameLength == 0 {
-          endOfInput = true
+          state.endOfInput = true
           inputStatus.pointee = .endOfStream
           return nil
         }
@@ -81,7 +84,7 @@ final class AudioDecoder {
         inputStatus.pointee = .haveData
         return inBuf
       }
-      if let readError { throw TranscriberError.decode("\(readError)") }
+      if let readError = state.readError { throw TranscriberError.decode("\(readError)") }
       if status == .error { throw TranscriberError.decode(convError?.localizedDescription ?? "conversion failed") }
       if let ch = outBuf.floatChannelData, outBuf.frameLength > 0 {
         let n = min(Int(outBuf.frameLength), wanted - out.count)
@@ -92,4 +95,10 @@ final class AudioDecoder {
     if out.count < wanted { out.append(contentsOf: repeatElement(0, count: wanted - out.count)) }
     return out
   }
+}
+
+/// Mutable state shared with the AVAudioConverter input block (see `AudioDecoder.read`).
+private final class DecoderInputState {
+  var endOfInput = false
+  var readError: Error?
 }

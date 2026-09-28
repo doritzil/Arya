@@ -491,8 +491,8 @@ enum SMF {
     }
     track += [0x00, 0xFF, 0x2F, 0x00]
 
-    var data: [UInt8] = Array("MThd".utf8) + be32(6) + be16(0) + be16(1) + be16(ppq)
-    data += Array("MTrk".utf8) + be32(UInt32(track.count)) + track
+    var data: [UInt8] = [UInt8]("MThd".utf8) + be32(6) + be16(0) + be16(1) + be16(ppq)
+    data += [UInt8]("MTrk".utf8) + be32(UInt32(track.count)) + track
     return Data(data)
   }
 

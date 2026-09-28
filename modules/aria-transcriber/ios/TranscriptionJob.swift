@@ -245,7 +245,7 @@ final class TranscriptionJob {
   /// TODO(iOS 26): use BGContinuedProcessingTask (identifier registered by withAriaInfoPlist) to keep
   /// running with system progress UI.
   private func beginBackgroundTask() {
-    DispatchQueue.main.async { [self] in
+    Task { @MainActor [self] in
       backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "aria.transcribe.\(id)") { [self] in
         suspendFlag.value = true
         endBackgroundTask()
@@ -254,7 +254,7 @@ final class TranscriptionJob {
   }
 
   private func endBackgroundTask() {
-    DispatchQueue.main.async { [self] in
+    Task { @MainActor [self] in
       guard backgroundTask != .invalid else { return }
       UIApplication.shared.endBackgroundTask(backgroundTask)
       backgroundTask = .invalid
