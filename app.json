@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.arya.piano",
+      "bundleIdentifier": "com.doritlz.arya",
       "supportsTablet": false,
       "deploymentTarget": "17.0"
     },

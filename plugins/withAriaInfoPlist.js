@@ -31,7 +31,7 @@ const union = (list, add) => [...new Set([...(list ?? []), ...add])];
 
 /** @type {import('@expo/config-plugins').ConfigPlugin<{ microphone?: string; appleMusic?: string; bgTaskIdentifiers?: string[] } | void>} */
 const withAriaInfoPlist = (config, props) => {
-  const bundleId = config.ios?.bundleIdentifier ?? 'com.arya.piano';
+  const bundleId = config.ios?.bundleIdentifier ?? 'com.doritlz.arya';
   const bgIds = props?.bgTaskIdentifiers ?? [`${bundleId}.transcribe`, `${bundleId}.transcribe.*`];
 
   return withInfoPlist(config, (cfg) => {
