@@ -20,12 +20,10 @@ public final class AriaTranscriberModule: Module {
     Events("progress", "done", "error")
 
     Constant("modelInfo") { () -> [String: Any] in
-      let bundled = Bundle.main.url(forResource: CoreMLOnsetsFramesModel.resourceName, withExtension: "mlmodelc") != nil
-      // Loading the model just to read metadata is expensive; the id/version are refreshed after first load.
-      return [
-        "id": self.sharedModel?.id ?? CoreMLOnsetsFramesModel.resourceName,
-        "version": self.sharedModel?.version ?? "unknown",
-        "available": bundled,
+      [
+        "id": BasicPitchModel.modelId,
+        "version": BasicPitchModel.modelVersion,
+        "available": BasicPitchModel.isBundled,
       ]
     }
 
@@ -80,7 +78,7 @@ public final class AriaTranscriberModule: Module {
     defer { lock.unlock() }
     if let m = sharedModel { return m }
     do {
-      let m = try CoreMLOnsetsFramesModel()
+      let m = try BasicPitchModel()
       sharedModel = m
       return m
     } catch {

@@ -495,7 +495,7 @@ openInAppleMusic(appleMusicId: string): void;               // non-subscriber pr
 
 ### 8.4 Config plugins (`plugins/`)
 
-`withAriaInfoPlist` (usage strings: microphone, Apple Music; `UIBackgroundModes: [audio, processing]`; document types for m4a/wav/mp3/aiff with "Open in Aria"), `withMusicKit`, `withICloud`, `withModelAsset` (adds the `.mlpackage` to the Xcode project so it's compiled to `.mlmodelc`).
+`withAriaInfoPlist` (usage strings: microphone, Apple Music; `UIBackgroundModes: [audio, processing]`; document types for m4a/wav/mp3/aiff with "Open in Aria"), `withMusicKit`, `withICloud`, `withModelAsset` (adds the `.mlpackage` to the Xcode project so it's compiled to `.mlmodelc`). *Built instead:* the model ships as a pod resource bundle and is compiled on device on first use — see DEVELOPMENT.md.
 
 ### 8.5 Microphone permission purpose string (NFR-2)
 

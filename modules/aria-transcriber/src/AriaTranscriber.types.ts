@@ -71,7 +71,7 @@ export interface AriaTranscriberEvents {
 export interface ModelInfo {
   id: string;
   version: string;
-  /** false when the .mlmodelc isn't bundled (or in the mock) */
+  /** false when the model isn't bundled (or in the mock) */
   available: boolean;
 }
 

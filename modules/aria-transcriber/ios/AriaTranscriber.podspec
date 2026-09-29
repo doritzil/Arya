@@ -17,6 +17,9 @@ Pod::Spec.new do |s|
 
   s.source_files = '**/*.{h,m,swift}'
   s.exclude_files = 'Tests/**/*'
+  # Basic Pitch (Spotify, Apache-2.0) as plain files: Xcode would otherwise try to compile an .mlpackage in a
+  # pod. BasicPitchModel reassembles and compiles it on first use (see BasicPitchModel.swift).
+  s.resource_bundles = { 'AriaTranscriberModel' => ['Model/*'] }
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
     'SWIFT_COMPILATION_MODE' => 'wholemodule'

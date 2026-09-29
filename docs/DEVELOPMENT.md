@@ -9,7 +9,6 @@ How to run the app, what's real and what's mocked, and what's left. The design i
 pnpm install
 pnpm test          # score engine + app tests (Jest)
 pnpm typecheck     # tsc --noEmit
-pnpm lint          # eslint (expo config)
 ```
 
 Expo SDK 57 · React Native 0.86 (New Architecture) · Expo Router · TypeScript strict · pnpm workspace.
@@ -84,10 +83,15 @@ Generated files — don't edit by hand: `src/theme/tokens.generated.ts` (`pnpm g
 1. **Compile on a Mac.** None of the Swift has been compiled yet. Expect a round of fixes in `modules/*/ios`.
    Things flagged for on-device checks: `hostTime` vs `performance.now()` timebase (fallback: `wallTime`),
    Core ML compute units in the background, `.allowBluetooth` deprecation in the iOS 26 SDK, MusicKit state observation.
-2. **Phase 1 model spike** (ARCHITECTURE §7.1): pick and convert the model, bundle `AriaTranscriber.mlmodelc`,
-   fix the input/output names in `CoreMLOnsetsFramesModel`. Needs a `withModelAsset` config plugin.
+2. **Transcription quality.** The bundled model is Spotify's **Basic Pitch** (Apache-2.0, `modules/aria-transcriber/ios/Model/`,
+   adapter `BasicPitchModel.swift`). It's general-purpose, not piano-specific: no velocity or pedal heads, and it
+   hears piano overtones as quiet octave notes (filtered in post-processing). Checked offline against the same
+   network in ONNX: chunk stitching is frame-exact and note starts land within ~20 ms. A piano-specific model
+   (ByteDance / Onsets & Frames, §7.1) can replace it behind `TranscriptionModel` later. The files ship as a pod
+   resource bundle and are compiled on device on first use (so no `withModelAsset` plugin is needed).
 3. **Bundle a piano SoundFont** (`AriaPiano.sf2`, ≤ 25 MB, permissive licence) — synth playback is silent without it.
-4. **Licence gates:** Verovio (LGPL-3.0, used in `ScoreView`), model weights / MAESTRO. Decide before TestFlight.
+4. **Licence gates:** Verovio (LGPL-3.0, used in `ScoreView`) is still open. Basic Pitch is Apache-2.0: its
+   LICENSE and NOTICE ship in the model bundle and need to appear in an in-app Acknowledgements screen.
 5. **Curated MIDI** for public-domain pieces (`catalog-midi/*.mid`) + a MIDI → RawNotes reader; until then
    Keyboard mode's "score" source uses a generated demo piece.
 6. **reco-api** (Cloudflare Worker + D1, §9): catalog, Apple Music IDs, feedback outbox flush. Until then the app

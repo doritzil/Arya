@@ -36,10 +36,9 @@ struct TranscriptionCheckpoint: Codable {
   var hasPedal: Bool
 }
 
-/// One transcription: decode → chunk (10 s, 2 s overlap) → model → stitch central regions → post-process →
-/// write notes.raw.json atomically. Runs in a detached `Task`; cancellation is checked between chunks.
+/// One transcription: decode → chunk (the model's window and overlap) → model → stitch central regions →
+/// post-process → write notes.raw.json atomically. Runs in a detached `Task`; cancellation is checked between chunks.
 final class TranscriptionJob {
-  static let overlapSec = 2.0
 
   let id: String
   let audioURL: URL
@@ -114,10 +113,11 @@ final class TranscriptionJob {
     }
 
     let chunkSec = model.chunkSeconds
-    let hopSec = chunkSec - Self.overlapSec
-    let margin = Self.overlapSec / 2
+    let overlapSec = model.overlapSec
+    let hopSec = chunkSec - overlapSec
+    let margin = overlapSec / 2
     let audioSec = max(0, decoder.durationSec - startAtSec)
-    let chunkCount = max(1, Int(ceil(max(0, audioSec - Self.overlapSec) / hopSec)))
+    let chunkCount = max(1, Int(ceil(max(0, audioSec - overlapSec) / hopSec)))
     let fr = model.frameRate
 
     // Resume from a checkpoint written by an earlier, suspended/killed run of the same job.
@@ -154,8 +154,9 @@ final class TranscriptionJob {
       emit("progress", ["jobId": id, "fraction": min(0.99, Double(k + 1) / Double(chunkCount)), "stage": "notes"])
     }
 
-    let pedal = PostProcessing.pedal(track, startSec: startAtSec)
-    let notes = PostProcessing.applyPedal(PostProcessing.notes(track, startSec: startAtSec), pedal: pedal)
+    let params = model.postParams
+    let pedal = PostProcessing.pedal(track, startSec: startAtSec, params: params)
+    let notes = PostProcessing.applyPedal(PostProcessing.notes(track, startSec: startAtSec, params: params), pedal: pedal)
     return (notes, pedal)
   }
 

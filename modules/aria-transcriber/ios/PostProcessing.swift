@@ -79,6 +79,11 @@ enum PostProcessing {
     var pedalOff: Float = 0.3
     var minNoteSec: Double = 0.03
     var minPedalSec: Double = 0.1
+    /// Frames a held note may dip below `frameThreshold` before it ends (Basic Pitch's `energy_tol`).
+    var frameTolerance: Int = 0
+    /// Drop a note that starts with a note an octave, octave + fifth or two octaves below it and is quieter
+    /// than this fraction of it: an overtone, not a key. nil = keep everything.
+    var overtoneRatio: Float? = nil
   }
 
   /// Onset peak picking (local maxima above threshold, sub-frame refined by a parabola through the peak),
@@ -101,15 +106,23 @@ enum PostProcessing {
         let delta = denom != 0 ? Double(0.5 * (prev - next) / denom) : 0
         let onsetSec = (Double(f) + max(-0.5, min(0.5, delta))) / fr
 
-        // Sustain
+        // Sustain: `end` is one past the last active frame; short dips (≤ frameTolerance) are bridged.
         var end = f + 1
-        while end < n {
-          if t.frame(end, k) < p.frameThreshold { break }
-          if t.hasOffsets && t.offset(end, k) >= p.offsetThreshold { break }
+        var i = f + 1
+        var quiet = 0
+        while i < n {
+          if t.hasOffsets && t.offset(i, k) >= p.offsetThreshold { break }
           // a new onset peak on the same key = re-strike
-          let eo = t.onset(end, k)
-          if eo >= p.onsetThreshold && eo >= t.onset(end - 1, k) && (end + 1 >= n || eo > t.onset(end + 1, k)) { break }
-          end += 1
+          let eo = t.onset(i, k)
+          if eo >= p.onsetThreshold && eo >= t.onset(i - 1, k) && (i + 1 >= n || eo > t.onset(i + 1, k)) { break }
+          if t.frame(i, k) < p.frameThreshold {
+            quiet += 1
+            if quiet > p.frameTolerance { break }
+          } else {
+            quiet = 0
+            end = i + 1
+          }
+          i += 1
         }
         let offsetSec = Double(end) / fr
         if offsetSec - onsetSec >= p.minNoteSec {
@@ -125,7 +138,28 @@ enum PostProcessing {
       }
     }
     out.sort { $0.onset != $1.onset ? $0.onset < $1.onset : $0.pitch < $1.pitch }
+    if let ratio = p.overtoneRatio { out = dropOvertones(out, ratio: ratio) }
     return out
+  }
+
+  /// `notes` sorted by onset. Neighbours within 50 ms are compared; genuine octaves (similar loudness) stay.
+  static func dropOvertones(_ notes: [RawNoteOut], ratio: Float, window: Double = 0.05) -> [RawNoteOut] {
+    var keep = [Bool](repeating: true, count: notes.count)
+    var lo = 0
+    for i in notes.indices {
+      let n = notes[i]
+      while notes[lo].onset < n.onset - window { lo += 1 }
+      var j = lo
+      while j < notes.count && notes[j].onset <= n.onset + window {
+        let d = n.pitch - notes[j].pitch
+        if j != i && (d == 12 || d == 19 || d == 24) && Float(n.velocity) < ratio * Float(notes[j].velocity) {
+          keep[i] = false
+          break
+        }
+        j += 1
+      }
+    }
+    return notes.indices.filter { keep[$0] }.map { notes[$0] }
   }
 
   /// Sustain pedal spans with hysteresis.

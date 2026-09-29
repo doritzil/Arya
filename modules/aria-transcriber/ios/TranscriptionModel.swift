@@ -32,8 +32,17 @@ protocol TranscriptionModel: AnyObject {
   /// Fixed input window the model was exported with; shorter final chunks are zero-padded.
   var chunkSeconds: Double { get }
   var frameRate: Double { get }
+  /// Overlap between consecutive chunks; half of it is trimmed from each inner chunk edge.
+  var overlapSec: Double { get }
+  /// Note-building thresholds tuned for this model.
+  var postParams: PostProcessing.Params { get }
   /// `samples.count == Int(sampleRate * chunkSeconds)`.
   func predict(samples: [Float]) throws -> FrameActivations
+}
+
+extension TranscriptionModel {
+  var overlapSec: Double { 2 }
+  var postParams: PostProcessing.Params { PostProcessing.Params() }
 }
 
 enum TranscriptionModelError: Error, CustomStringConvertible {
@@ -48,7 +57,7 @@ enum TranscriptionModelError: Error, CustomStringConvertible {
   }
 }
 
-/// PLACEHOLDER adapter for an onsets / frames / (offsets) / velocity / pedal model, e.g. the ByteDance
+/// Unused adapter (the app ships `BasicPitchModel`) for an onsets / frames / (offsets) / velocity / pedal model, e.g. the ByteDance
 /// high-resolution piano transcription network converted with coremltools (§7.1).
 ///
 /// Assumed I/O — adjust after the Phase 1 spike to match the converted model's spec
@@ -117,7 +126,7 @@ final class CoreMLOnsetsFramesModel: TranscriptionModel {
   }
 
   /// Copies a [1, T, 88] tensor (any strides, float32 or float16) into a dense row-major [T × 88] array.
-  private static func matrix(_ a: MLMultiArray, frames t: Int) throws -> [Float] {
+  static func matrix(_ a: MLMultiArray, frames t: Int) throws -> [Float] {
     let keys = FrameActivations.keys
     guard a.shape.count >= 2, a.shape[a.shape.count - 1].intValue == keys else {
       throw TranscriptionModelError.badOutput("expected [...,T,88], got \(a.shape)")
@@ -136,7 +145,7 @@ final class CoreMLOnsetsFramesModel: TranscriptionModel {
   }
 
   /// Gives `body` a strided element reader over the tensor's storage (float32 / float16 fast paths).
-  private static func read(_ a: MLMultiArray, _ body: ((Int) -> Float) -> Void) {
+  static func read(_ a: MLMultiArray, _ body: ((Int) -> Float) -> Void) {
     switch a.dataType {
     case .float32:
       a.withUnsafeBufferPointer(ofType: Float.self) { p in body { p[$0] } }
