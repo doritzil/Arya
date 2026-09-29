@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 
 import { useLibrary } from '@/data/store';
-import { cancelTranscription } from '@/features/record/session';
+import { canTranscribe, cancelTranscription } from '@/features/record/session';
 import { formatDuration } from '@/lib/format';
 import { radius, space, useTheme } from '@/theme';
 import { Button } from '@/ui/Button';
@@ -96,7 +96,9 @@ export default function Transcribing() {
         </View>
         {failed ? (
           <Text variant="callout" color="warning">
-            We couldn&apos;t turn this take into notes. Your recording is safe — you can try again from Recordings.
+            {canTranscribe()
+              ? "We couldn't turn this take into notes. Your recording is safe — you can try again from Recordings."
+              : "Turning recordings into notes isn't in this test build yet. Your recording is saved — you can play it from Recordings."}
           </Text>
         ) : null}
       </Glass>

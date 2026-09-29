@@ -58,11 +58,21 @@ export async function finishTake(): Promise<Project> {
   if (!pending) throw new Error('No take in progress');
   const project: Project = { ...pending.project, durationSec: result.durationSec, transcriptionStatus: 'queued' };
   pending = null;
-  await takeFiles.saveManifest(project, result);
+  // The audio is on disk now. Nothing after this point may lose the take or strand the user on the
+  // recording screen: failures only mark the take, which the Transcribing screen then explains.
+  await takeFiles.saveManifest(project, result).catch((e) => console.warn('[record] manifest save failed', e));
   useLibrary.getState().addProject(project);
-  await startTranscription(project, result.file, result.countInEndSec);
+  try {
+    await startTranscription(project, result.file, result.countInEndSec);
+  } catch (e) {
+    console.warn('[record] transcription did not start', e);
+    useLibrary.getState().updateProject(project.id, { transcriptionStatus: 'failed', transcriptionProgress: 0 });
+  }
   return project;
 }
+
+/** False in builds that don't ship the transcription model yet (the take still records and plays). */
+export const canTranscribe = () => !Transcriber.isNative || Transcriber.modelInfo.available;
 
 export async function discardTake() {
   pending = null;
