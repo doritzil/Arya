@@ -80,8 +80,16 @@ export type Level = 1 | 2 | 3 | 4 | 5;
 export const levelName = (l: Level) => LEVELS[l - 1];
 
 /** Piano difficulty: 1–5 dots plus the level word (FR-25). */
-export function Difficulty({ level }: { level: Level }) {
+export function Difficulty({ level }: { level?: Level }) {
   const { colors } = useTheme();
+  // Songs found on Apple Music have no curated level yet — say so rather than guess.
+  if (!level) {
+    return (
+      <Text variant="footnote" color="inkMuted" accessibilityLabel="Difficulty not rated yet">
+        Level not rated yet
+      </Text>
+    );
+  }
   return (
     <View
       style={{ flexDirection: 'row', alignItems: 'center', gap: space[1] }}

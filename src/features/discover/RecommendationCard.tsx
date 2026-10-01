@@ -16,7 +16,7 @@ import { Text } from '@/ui/Text';
  * SongCard `recommendation` variant (FR-25, FR-26, FR-29, FR-30). Plays in place — the card never
  * navigates; Want to learn toggles to "Added to Learning"; ✕ removes it and counts as not interested.
  */
-export function RecommendationCard({ song }: { song: CatalogSong }) {
+export function RecommendationCard({ song, dismissible = true }: { song: CatalogSong; dismissible?: boolean }) {
   const key = `song:${song.catalogId}`;
   const playing = useIsPlaying(key);
   const progress = useProgress(key);
@@ -74,7 +74,9 @@ export function RecommendationCard({ song }: { song: CatalogSong }) {
         />
         {song.midiUrl ? <KeysMarker /> : null}
         <View style={{ flex: 1 }} />
-        <IconButton icon="close" size="small" label={`Not interested in ${song.title}`} onPress={() => dismiss(song.catalogId)} />
+        {dismissible ? (
+          <IconButton icon="close" size="small" label={`Not interested in ${song.title}`} onPress={() => dismiss(song.catalogId)} />
+        ) : null}
       </View>
     </Glass>
   );

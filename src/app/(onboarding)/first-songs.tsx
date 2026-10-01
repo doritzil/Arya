@@ -17,7 +17,7 @@ export default function FirstSongs() {
   const setPrefs = useLibrary((s) => s.setPrefs);
   useEffect(() => refreshFeed(), [refreshFeed]);
 
-  const levels = feed.map((s) => s.difficulty);
+  const levels = feed.flatMap((s) => (s.difficulty ? [s.difficulty] : []));
   const lo = levels.length ? Math.min(...levels) : prefs.level;
   const hi = levels.length ? Math.max(...levels) : prefs.level;
   const genres = prefs.genres.slice(0, 2).join(', ') + (prefs.genres.length > 2 ? ` and ${prefs.genres[2]}` : '');

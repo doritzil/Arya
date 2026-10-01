@@ -41,6 +41,10 @@ const APPLE_TO_ARIA: Record<string, PickableGenre> = {
   worship: 'Worship',
 };
 
+/** Apple's genre name (e.g. "Soundtrack") → Aria's genre, if there's a sensible one. */
+export const toAriaGenre = (appleGenre: string | undefined): PickableGenre | undefined =>
+  appleGenre ? APPLE_TO_ARIA[appleGenre.toLowerCase()] : undefined;
+
 export type ConnectResult =
   | { ok: true; weights: Partial<Record<PickableGenre, number>> }
   | { ok: false; reason: 'unavailable' | 'denied' };

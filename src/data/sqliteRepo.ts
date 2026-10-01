@@ -62,7 +62,6 @@ function songFromRow(r: schema.SongRow): Song {
     title: r.title,
     artist: r.artist,
     genre: r.genre,
-    difficulty: r.difficulty,
     status: r.status,
     addedAt: r.addedAt,
     favourite: r.favourite,
@@ -73,6 +72,7 @@ function songFromRow(r: schema.SongRow): Song {
   const previewUrl = undef(r.previewUrl);
   const durationSec = undef(r.durationSec);
   const midiPath = undef(r.midiPath);
+  if (r.difficulty) s.difficulty = r.difficulty;
   if (catalogId !== undefined) s.catalogId = catalogId;
   if (appleMusicId !== undefined) s.appleMusicId = appleMusicId;
   if (learnedAt !== undefined) s.learnedAt = learnedAt;
@@ -90,7 +90,7 @@ function songToRow(s: Song): typeof schema.songs.$inferInsert {
     title: s.title,
     artist: s.artist,
     genre: s.genre,
-    difficulty: s.difficulty,
+    difficulty: s.difficulty ?? 0,
     status: s.status,
     addedAt: s.addedAt,
     learnedAt: s.learnedAt ?? null,

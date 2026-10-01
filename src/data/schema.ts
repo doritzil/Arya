@@ -20,7 +20,7 @@ export const songs = sqliteTable(
     title: text('title').notNull(),
     artist: text('artist').notNull(),
     genre: text('genre').$type<Genre>().notNull(),
-    difficulty: integer('difficulty').$type<Level>().notNull(),
+    difficulty: integer('difficulty').$type<Level | 0>().notNull() /* 0 = not rated */,
     status: text('status', { enum: ['learning', 'learned'] }).notNull(),
     /** epoch ms */
     addedAt: integer('added_at').notNull(),

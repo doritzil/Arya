@@ -6,7 +6,12 @@ export default function TabsLayout() {
   return (
     <Tabs
       tabBar={(props) => <TabBar {...props} />}
-      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: 'transparent' } }}>
+      screenOptions={({ navigation }) => ({
+        headerShown: false,
+        // Scenes are transparent (one gradient behind everything). Where inactive tabs aren't detached
+        // (web), hide them so they don't show through the focused one.
+        sceneStyle: { backgroundColor: 'transparent', display: navigation.isFocused() ? 'flex' : 'none' },
+      })}>
       <Tabs.Screen name="discover" />
       <Tabs.Screen name="learning" />
       <Tabs.Screen name="record" />

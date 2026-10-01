@@ -30,7 +30,8 @@ export interface CatalogSong {
   title: string;
   artist: string;
   genre: Genre;
-  difficulty: Level;
+  /** Hand-curated for the seed catalog; undefined for songs found on Apple Music (not rated yet). */
+  difficulty?: Level;
   previewUrl?: string;
   durationSec?: number;
   /** Curated public-domain MIDI — unlocks Keyboard mode for the score (§6.6). */
@@ -45,7 +46,7 @@ export interface Song {
   title: string;
   artist: string;
   genre: Genre;
-  difficulty: Level;
+  difficulty?: Level;
   status: 'learning' | 'learned';
   addedAt: number;
   learnedAt?: number;

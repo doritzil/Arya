@@ -35,7 +35,7 @@ export function rankRecommendations(catalog: CatalogSong[], input: RankInput): R
     .map((song) => {
       const genre = picked.has(song.genre) ? 1 : (ADJACENT[song.genre] ?? []).some((g) => picked.has(g)) ? 0.6 : 0;
       const listen = input.genreWeights?.[song.genre] ?? 0;
-      const fit = Math.exp(-((song.difficulty - target) ** 2) / 2); // Gaussian, σ = 1 level
+      const fit = Math.exp(-(((song.difficulty ?? target) - target) ** 2) / 2); // Gaussian, σ = 1 level
       const score = genre * 2 + listen + fit * 1.5 + stableJitter(song.catalogId) * 0.1;
       const reason = `${genre ? 'genre' : 'adjacent'} · fit ${fit.toFixed(2)}${listen ? ` · listening ${listen.toFixed(2)}` : ''}`;
       return { song, score, reason };

@@ -95,7 +95,9 @@ Generated files — don't edit by hand: `src/theme/tokens.generated.ts` (`pnpm g
 5. **Curated MIDI** for public-domain pieces (`catalog-midi/*.mid`) + a MIDI → RawNotes reader; until then
    Keyboard mode's "score" source uses a generated demo piece.
 6. **reco-api** (Cloudflare Worker + D1, §9): catalog, Apple Music IDs, feedback outbox flush. Until then the app
-   looks songs up with Apple's public iTunes Search API (`src/services/appleMusic.ts`) for preview URLs and IDs.
+   uses Apple's public iTunes Search API (`src/services/appleMusic.ts`) for preview URLs and IDs, and Discover
+   search shows the whole Apple Music catalog below the 71 rated seed songs. Those songs have no difficulty
+   ("Level not rated yet") until reco-api can rate them.
 7. **Apple Music full playback** is routed (subscribers + permission + dev build → MusicKit; everyone else → preview)
    but untested on a device.
 8. **Not designed yet:** Library (built from existing patterns), Settings, rename/duplicate/delete takes, empty and

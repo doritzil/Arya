@@ -88,7 +88,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   refreshFeed() {
     const { prefs, songs, hidden, genreWeights } = get();
     const exclude = new Set([...hidden, ...songs.flatMap((s) => (s.catalogId ? [s.catalogId] : []))]);
-    const learnedLevels = songs.filter((s) => s.status === 'learned').map((s) => s.difficulty);
+    const learnedLevels = songs.flatMap((s) => (s.status === 'learned' && s.difficulty ? [s.difficulty] : []));
     const feed = rankRecommendations(SEED_CATALOG, {
       genres: prefs.genres,
       level: prefs.level,

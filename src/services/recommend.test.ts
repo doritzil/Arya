@@ -30,7 +30,7 @@ describe('rankRecommendations', () => {
     const exclude = new Set(SEED_CATALOG.slice(0, 5).map((s) => s.catalogId));
     const out = rankRecommendations(SEED_CATALOG, { genres: ['Classical', 'Film & TV', 'Worship'], level: 1, exclude });
     expect(out.some((r) => exclude.has(r.song.catalogId))).toBe(false);
-    const avg = out.slice(0, 10).reduce((a, r) => a + r.song.difficulty, 0) / 10;
+    const avg = out.slice(0, 10).reduce((a, r) => a + (r.song.difficulty ?? 0), 0) / 10;
     expect(avg).toBeLessThan(2.5);
   });
 });
