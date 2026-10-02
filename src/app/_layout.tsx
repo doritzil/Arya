@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useLibrary } from '@/data/store';
 import { recoverAfterLaunch } from '@/features/record/session';
+import { useStopOnNavigate } from '@/playback/useStopOnNavigate';
 import { listeningWeights } from '@/services/listening';
 import { ThemeProvider, useAriaFonts, useTheme } from '@/theme';
 import { Background } from '@/ui/Background';
@@ -60,6 +61,7 @@ export default function RootLayout() {
 
 function Shell() {
   const { scheme } = useTheme();
+  useStopOnNavigate();
   const onboarded = useLibrary((s) => s.prefs.onboardingDone);
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
   // Screens are transparent so the one gradient behind the navigator shows through (§6.3).
