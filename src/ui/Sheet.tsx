@@ -36,22 +36,29 @@ export function Sheet({
   const { height } = useWindowDimensions();
   // An explicit height, not flex: 1. On iOS a formSheet's content is laid out with no bottom edge, so a
   // flex: 1 root collapses to zero height and the sheet opens empty.
+  //
+  // The fixed header must come first, and neither wrapper may be flattened (collapsable={false}):
+  // react-native-screens looks for a ScrollView down the first-child chain of a formSheet and forces its frame
+  // to the whole sheet's frame. With the ScrollView first, that moved our content a sheet-offset down, below
+  // the footer (blank sheet on iOS 26). Header first keeps the ScrollView out of that search.
   return (
-    <View style={{ height: Math.round(height * detent), backgroundColor: colors.surfaceRaised }}>
-      <ScrollView contentContainerStyle={{ padding: space[5], paddingBottom: space[4] }}>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space[3], marginBottom: space[4] }}>
-          <View style={{ flex: 1, gap: space[1] }}>
-            <Text variant="title2" accessibilityRole="header">
-              {title}
+    <View collapsable={false} style={{ height: Math.round(height * detent), backgroundColor: colors.surfaceRaised }}>
+      <View
+        collapsable={false}
+        style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space[3], padding: space[5], paddingBottom: space[3] }}>
+        <View style={{ flex: 1, gap: space[1] }}>
+          <Text variant="title2" accessibilityRole="header">
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text variant="callout" color="inkMuted">
+              {subtitle}
             </Text>
-            {subtitle ? (
-              <Text variant="callout" color="inkMuted">
-                {subtitle}
-              </Text>
-            ) : null}
-          </View>
-          <IconButton icon="close" size="small" label="Close" onPress={() => router.back()} />
+          ) : null}
         </View>
+        <IconButton icon="close" size="small" label="Close" onPress={() => router.back()} />
+      </View>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: space[5], paddingBottom: space[4] }}>
         {children}
       </ScrollView>
       {footer ? (
