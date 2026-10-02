@@ -20,7 +20,7 @@ describe('ulid', () => {
 });
 
 describe('manifest', () => {
-  const m = newManifest('song', 'Clair de Lune', 'song-1', { id: '01TEST', now: 1000 });
+  const m = newManifest('song', 'Nuvole Bianche', 'song-1', { id: '01TEST', now: 1000 });
 
   it('round-trips through JSON', () => {
     expect(parseManifest(serializeManifest(m))).toEqual(m);
@@ -48,7 +48,7 @@ describe('manifest', () => {
       id: '01TEST',
       kind: 'song',
       songId: 'song-1',
-      name: 'Clair de Lune',
+      name: 'Nuvole Bianche',
       createdAt: 1000,
       updatedAt: 1000,
       durationSec: 62.5,

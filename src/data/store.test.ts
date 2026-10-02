@@ -4,7 +4,7 @@ import { __setRepo, flushWrites, keyboardAvailability, useLibrary } from './stor
 import type { Project, Song } from './types';
 
 const hello = SEED_CATALOG.find((s) => s.title === 'Hello')!;
-const gymno = SEED_CATALOG.find((s) => s.title === 'Gymnopédie No. 1')!;
+const nuvole = SEED_CATALOG.find((s) => s.title === 'Nuvole Bianche')!;
 
 beforeEach(async () => {
   __setRepo(createMemoryRepo());
@@ -43,9 +43,9 @@ describe('learning loop', () => {
     s.want(hello);
     s.undoWant(hello.catalogId);
     expect(useLibrary.getState().songs).toHaveLength(0);
-    s.dismiss(gymno.catalogId);
+    s.dismiss(nuvole.catalogId);
     s.refreshFeed();
-    expect(useLibrary.getState().feed.some((x) => x.catalogId === gymno.catalogId)).toBe(false);
+    expect(useLibrary.getState().feed.some((x) => x.catalogId === nuvole.catalogId)).toBe(false);
   });
 });
 
@@ -60,15 +60,9 @@ describe('keyboardAvailability (§6.6)', () => {
     expect(keyboardAvailability(song, [running, done, take(song, 'done', 1, 'old')])).toMatchObject({ state: 'myNotes', projectId: done.id });
   });
 
-  it('unlocks public-domain pieces from the curated score, unless a take is chosen', () => {
-    const song = useLibrary.getState().want(gymno);
-    expect(keyboardAvailability(song, [])).toEqual({ state: 'score', catalogId: gymno.catalogId });
-    const done = take(song, 'done', 5);
-    expect(keyboardAvailability(song, [done], done.id).state).toBe('myNotes');
-  });
-  it('keeps pieces without a curated score locked (no placeholder notes)', () => {
+  it('keeps every catalog song locked until there are notes', () => {
+    expect(SEED_CATALOG.some((s) => s.midiUrl)).toBe(false);
     const canon = SEED_CATALOG.find((s) => s.title === 'Canon in D')!;
-    expect(canon.midiUrl).toBeUndefined();
     expect(keyboardAvailability(useLibrary.getState().want(canon), []).state).toBe('locked');
   });
 });

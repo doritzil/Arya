@@ -8,17 +8,7 @@ import type { CatalogSong, Genre, Level } from './types';
 type Row = [title: string, artist: string, genre: Genre, level: Level];
 
 const ROWS: Row[] = [
-  ['Clair de Lune', 'Debussy', 'Classical', 3],
-  ['Gymnopédie No. 1', 'Satie', 'Classical', 2],
-  ['Für Elise', 'Beethoven', 'Classical', 2],
-  ['Prelude in E minor, Op. 28 No. 4', 'Chopin', 'Classical', 3],
-  ['Minuet in G', 'Bach (attr. Petzold)', 'Classical', 1],
-  ['Moonlight Sonata, 1st mvt', 'Beethoven', 'Classical', 3],
-  ['Arabesque No. 1', 'Debussy', 'Classical', 4],
-  ['Nocturne in E-flat, Op. 9 No. 2', 'Chopin', 'Classical', 4],
   ['Canon in D', 'Pachelbel', 'Classical', 2],
-  ['Maple Leaf Rag', 'Scott Joplin', 'Jazz', 4],
-  ['The Entertainer', 'Scott Joplin', 'Jazz', 3],
   ['Autumn Leaves', 'Joseph Kosma', 'Jazz', 3],
   ['Take Five', 'Dave Brubeck', 'Jazz', 4],
   ['Fly Me to the Moon', 'Bart Howard', 'Jazz', 3],
@@ -51,7 +41,6 @@ const ROWS: Row[] = [
   ['Lovely Day', 'Bill Withers', 'R&B', 2],
   ['Isn’t She Lovely', 'Stevie Wonder', 'R&B', 3],
   ['Superstition', 'Stevie Wonder', 'R&B', 3],
-  ['Amazing Grace', 'Traditional', 'Worship', 1],
   ['How Great Thou Art', 'Traditional', 'Worship', 2],
   ['Be Thou My Vision', 'Traditional', 'Worship', 1],
   ['10,000 Reasons', 'Matt Redman', 'Worship', 2],

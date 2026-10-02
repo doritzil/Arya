@@ -66,9 +66,9 @@ function demoSongs(): Song[] {
     fromCatalog('River Flows in You', { addedAt: Date.now() - 60_000 }),
     fromCatalog('Married Life', { addedAt: at(9, 20) }),
     fromCatalog("Comptine d'un autre été", { addedAt: at(9, 18) }),
-    fromCatalog('Clair de Lune', { addedAt: at(9, 12), favourite: true }),
+    fromCatalog('Nuvole Bianche', { addedAt: at(9, 12), favourite: true }),
     fromCatalog('Hello', { addedAt: at(9, 27) }),
-    fromCatalog('Gymnopédie No. 1', { addedAt: at(9, 26) }),
+    fromCatalog('Kiss the Rain', { addedAt: at(9, 26) }),
     fromCatalog('Canon in D', { status: 'learned', addedAt: at(8, 2), learnedAt: at(9, 1) }),
   ];
 }
@@ -80,9 +80,9 @@ function project(p: Partial<Project> & Pick<Project, 'id' | 'name' | 'createdAt'
 function demoProjects(): Project[] {
   const id = (t: string) => `song-${SEED_CATALOG.find((s) => s.title === t)?.catalogId}`;
   return [
-    project({ id: 'p-cdl-3', songId: id('Clair de Lune'), name: 'Clair de Lune — Sep 24, 2026 · 4:12 PM', createdAt: at(9, 24) }),
-    project({ id: 'p-cdl-2', songId: id('Clair de Lune'), name: 'Clair de Lune — Sep 19, 2026 · 5:40 PM', createdAt: at(9, 19, 17, 40), durationSec: 288 }),
-    project({ id: 'p-cdl-1', songId: id('Clair de Lune'), name: 'Clair de Lune — Sep 13, 2026 · 6:02 PM', createdAt: at(9, 13, 18, 2), durationSec: 271, transcriptionStatus: 'none' }),
+    project({ id: 'p-nb-3', songId: id('Nuvole Bianche'), name: 'Nuvole Bianche — Sep 24, 2026 · 4:12 PM', createdAt: at(9, 24) }),
+    project({ id: 'p-nb-2', songId: id('Nuvole Bianche'), name: 'Nuvole Bianche — Sep 19, 2026 · 5:40 PM', createdAt: at(9, 19, 17, 40), durationSec: 288 }),
+    project({ id: 'p-nb-1', songId: id('Nuvole Bianche'), name: 'Nuvole Bianche — Sep 13, 2026 · 6:02 PM', createdAt: at(9, 13, 18, 2), durationSec: 271, transcriptionStatus: 'none' }),
     project({ id: 'p-ml-2', songId: id('Married Life'), name: 'Married Life — Sep 22, 2026 · 7:15 PM', createdAt: at(9, 22, 19, 15), durationSec: 142 }),
     project({ id: 'p-ml-1', songId: id('Married Life'), name: 'Married Life — Sep 21, 2026 · 8:01 PM', createdAt: at(9, 21, 20, 1), durationSec: 150 }),
     project({ id: 'p-comp-1', songId: id("Comptine d'un autre été"), name: "Comptine d'un autre été — Sep 20, 2026 · 6:30 PM", createdAt: at(9, 20, 18, 30), durationSec: 135 }),
