@@ -41,7 +41,7 @@ function useAccessibilityFlag(event: keyof typeof READERS) {
   return value;
 }
 
-/** Provides the Aria palette for the system scheme, or a forced one (Keyboard mode is always dark). */
+/** Provides the Aria palette for the system scheme, or a forced one. */
 export function ThemeProvider({ force, children }: { force?: Scheme; children: ReactNode }) {
   const system = useColorScheme();
   const scheme: Scheme = force ?? (system === 'dark' ? 'dark' : 'light');

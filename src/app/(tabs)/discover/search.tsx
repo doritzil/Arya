@@ -51,7 +51,7 @@ function useAppleMusicSearch(term: string): AppleState | null {
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 export default function Search() {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState(0);
   const songs = useLibrary((s) => s.songs);
@@ -93,6 +93,8 @@ export default function Search() {
             autoFocus
             placeholder="Songs, artists, composers"
             placeholderTextColor={colors.inkMuted}
+            keyboardAppearance={scheme}
+            selectionColor={colors.accent}
             accessibilityLabel="Search songs, artists or composers"
             returnKeyType="search"
             style={{ flex: 1, color: colors.ink, fontFamily: fontFamily[400], fontSize: typeScale.body.fontSize }}

@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import { takesFor, useLibrary } from '@/data/store';
-import { space } from '@/theme';
+import { space, useTheme } from '@/theme';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
 import { IconTile } from '@/ui/IconTile';
@@ -10,6 +10,7 @@ import { Screen, TopBar } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 
 export default function NewRecording() {
+  const { colors } = useTheme();
   const allSongs = useLibrary((s) => s.songs);
   const songs = allSongs.filter((x) => x.status === 'learning');
   const projects = useLibrary((s) => s.projects);
@@ -47,7 +48,7 @@ export default function NewRecording() {
               accessibilityRole="button"
               accessibilityLabel={`Record ${s.title}`}
               onPress={() => router.push({ pathname: '/take/get-ready', params: { songId: s.id } })}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[3], borderTopWidth: i ? 1 : 0, borderColor: 'rgba(0,0,0,0.06)' }}>
+              style={{ flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[3], borderTopWidth: i ? 1 : 0, borderColor: colors.line }}>
               <View style={{ flex: 1 }}>
                 <Text variant="headline" numberOfLines={1}>
                   {s.title}

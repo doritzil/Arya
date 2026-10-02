@@ -20,7 +20,7 @@ const FILTERS = ['All', 'Songs', 'Ideas'] as const;
  * Not designed yet (handoff §6) — built from the existing patterns: Recordings' search + filter chips.
  */
 export default function Library() {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const songs = useLibrary((s) => s.songs);
   const projects = useLibrary((s) => s.projects);
   const [q, setQ] = useState('');
@@ -61,6 +61,8 @@ export default function Library() {
           onChangeText={setQ}
           placeholder="Search songs and ideas"
           placeholderTextColor={colors.inkMuted}
+          keyboardAppearance={scheme}
+          selectionColor={colors.accent}
           accessibilityLabel="Search your library"
           style={{ flex: 1, color: colors.ink, fontFamily: fontFamily[400], fontSize: typeScale.callout.fontSize }}
         />

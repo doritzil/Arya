@@ -14,7 +14,7 @@ import { Text } from '@/ui/Text';
 const FILTERS = ['All', 'Songs', 'Ideas'] as const;
 
 export default function Recordings() {
-  const { colors, shadows } = useTheme();
+  const { colors, shadows, scheme } = useTheme();
   const projects = useLibrary((s) => s.projects);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('All');
@@ -68,6 +68,8 @@ export default function Recordings() {
           onChangeText={setQ}
           placeholder="Search your recordings"
           placeholderTextColor={colors.inkMuted}
+          keyboardAppearance={scheme}
+          selectionColor={colors.accent}
           accessibilityLabel="Search your recordings"
           style={{ flex: 1, color: colors.ink, fontFamily: fontFamily[400], fontSize: typeScale.callout.fontSize }}
         />

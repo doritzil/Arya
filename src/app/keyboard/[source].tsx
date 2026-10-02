@@ -25,7 +25,7 @@ const LEAD_SEC = 2;
 
 export default function KeyboardModeRoute() {
   return (
-    <ThemeProvider force="dark">
+    <ThemeProvider>
       <KeyboardMode />
     </ThemeProvider>
   );

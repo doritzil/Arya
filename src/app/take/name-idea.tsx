@@ -9,7 +9,7 @@ import { SHEET_DETENTS, Sheet } from '@/ui/Sheet';
 import { Text } from '@/ui/Text';
 
 export default function NameIdea() {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const [name, setName] = useState('');
   const [now] = useState(() => Date.now());
   const ok = name.trim().length > 0;
@@ -32,6 +32,8 @@ export default function NameIdea() {
         accessibilityLabel="Idea name"
         placeholder="Night drive"
         placeholderTextColor={colors.inkMuted}
+        keyboardAppearance={scheme}
+        selectionColor={colors.accent}
         style={{
           height: 52,
           paddingHorizontal: space[4],
