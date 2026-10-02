@@ -366,9 +366,16 @@ final class Player {
     guard let seq = sequencer else { return }
     let lengthBeats = seq.beats(forSeconds: duration)
     for track in seq.tracks {
-      track.loopRange = AVBeatRange(start: 0, length: lengthBeats)
-      track.numberOfLoops = loop ? AVMusicTrackLoopCount.forever.rawValue : 0
-      track.isLoopingEnabled = loop
+      // AVMusicTrack raises an Objective-C exception (an app crash, uncatchable from Swift) for
+      // numberOfLoops values other than -1 (forever) or ≥ 1, and for an empty loop range — so only touch
+      // the loop settings to turn looping on; turning it off needs just isLoopingEnabled.
+      if loop && lengthBeats > 0 {
+        track.loopRange = AVBeatRange(start: 0, length: lengthBeats)
+        track.numberOfLoops = AVMusicTrackLoopCount.forever.rawValue
+        track.isLoopingEnabled = true
+      } else {
+        track.isLoopingEnabled = false
+      }
     }
   }
 

@@ -50,9 +50,16 @@ export const __setRepo = (r: LibraryRepo) => {
   repo = r;
 };
 
+/**
+ * Writes run one at a time, in the order they were made. Overlapping writes of the same project (e.g. a
+ * stale "running" landing after "done") would otherwise leave the older state on disk.
+ */
+let writes: Promise<void> = Promise.resolve();
 const persist = (fn: (r: LibraryRepo) => Promise<void>) => {
-  fn(getRepo()).catch((e) => console.warn('[library] persist failed', e));
+  writes = writes.then(() => fn(getRepo())).catch((e) => console.warn('[library] persist failed', e));
 };
+/** Resolves once every write queued so far has finished (tests, and before reading back from disk). */
+export const flushWrites = () => writes;
 
 export const useLibrary = create<LibraryState>((set, get) => ({
   ready: false,
@@ -165,13 +172,15 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   updateProject(id, patch) {
-    const projects = get().projects.map((p) => (p.id === id ? { ...p, ...patch, updatedAt: Date.now() } : p));
-    set({ projects });
-    const p = projects.find((x) => x.id === id);
-    // Progress ticks are UI-only; don't write them to disk.
-    if (p && !(Object.keys(patch).length === 1 && 'transcriptionProgress' in patch)) {
-      persist((r) => r.upsertProject(p));
-    }
+    const before = get().projects.find((p) => p.id === id);
+    if (!before) return;
+    // Progress ticks are UI-only: write to disk only when a stored field actually changes.
+    const changed = (Object.keys(patch) as (keyof Project)[]).some(
+      (k) => k !== 'transcriptionProgress' && patch[k] !== before[k],
+    );
+    const updated = { ...before, ...patch, ...(changed ? { updatedAt: Date.now() } : null) };
+    set({ projects: get().projects.map((p) => (p.id === id ? updated : p)) });
+    if (changed) persist((r) => r.upsertProject(updated));
   },
 
   deleteProject(id) {

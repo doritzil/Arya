@@ -151,9 +151,17 @@ export async function importTake(opts: { kind: Project['kind']; base: string; so
  */
 export async function recoverAfterLaunch() {
   await takeFiles.recover().catch((e) => console.warn('[record] recovery failed', e));
-  const { projects } = useLibrary.getState();
+  const { projects, updateProject } = useLibrary.getState();
   for (const p of projects) {
-    if ((p.transcriptionStatus === 'running' || p.transcriptionStatus === 'queued') && !byProject.has(p.id)) {
+    if (p.transcriptionStatus === 'done' || byProject.has(p.id)) continue;
+    // The notes file is only written when a transcription finishes, so its presence means "done" even if
+    // the status write was lost (an older build could overwrite it, or the app was killed right after).
+    const notes = await takeFiles.readRawNotes(p.id).catch(() => null);
+    if (notes) {
+      updateProject(p.id, { transcriptionStatus: 'done', transcriptionProgress: 1 });
+      continue;
+    }
+    if (p.transcriptionStatus === 'running' || p.transcriptionStatus === 'queued') {
       startTranscription(p, takeFiles.audioUri(p.id)).catch(() =>
         useLibrary.getState().updateProject(p.id, { transcriptionStatus: 'failed' }),
       );

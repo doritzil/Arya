@@ -1,6 +1,6 @@
 import { createMemoryRepo } from './memoryRepo';
 import { SEED_CATALOG } from './seedCatalog';
-import { __setRepo, keyboardAvailability, useLibrary } from './store';
+import { __setRepo, flushWrites, keyboardAvailability, useLibrary } from './store';
 import type { Project, Song } from './types';
 
 const hello = SEED_CATALOG.find((s) => s.title === 'Hello')!;
@@ -65,5 +65,31 @@ describe('keyboardAvailability (§6.6)', () => {
     expect(keyboardAvailability(song, [])).toEqual({ state: 'score', midiPath: gymno.midiUrl });
     const done = take(song, 'done', 5);
     expect(keyboardAvailability(song, [done], done.id).state).toBe('myNotes');
+  });
+});
+
+describe('project writes', () => {
+  it('keeps "done" on disk when an earlier write is slower (no stale "running")', async () => {
+    const base = createMemoryRepo();
+    const saved: string[] = [];
+    // The first write is slow; unserialized, it would land last and leave "running" on disk.
+    let delay = 30;
+    __setRepo({
+      ...base,
+      async upsertProject(p) {
+        const d = delay;
+        delay = 0;
+        await new Promise((r) => setTimeout(r, d));
+        saved.push(p.transcriptionStatus);
+      },
+    });
+    const song = useLibrary.getState().want(hello);
+    useLibrary.getState().addProject(take(song, 'queued', 1, 'w1'));
+    useLibrary.getState().updateProject('w1', { transcriptionStatus: 'running', transcriptionProgress: 0.1 });
+    useLibrary.getState().updateProject('w1', { transcriptionStatus: 'running', transcriptionProgress: 0.6 });
+    useLibrary.getState().updateProject('w1', { transcriptionStatus: 'done', transcriptionProgress: 1 });
+    await flushWrites();
+    // Progress-only ticks aren't written; order is preserved.
+    expect(saved).toEqual(['queued', 'running', 'done']);
   });
 });
