@@ -84,8 +84,15 @@ final class Player {
         try session.activate(for: .playback)
         let file = try AVAudioFile(forReading: .fromJS(uri))
         audioFile = file
+        // AVAudioUnitTimePitch can't convert formats: its input and output must match, or the engine fails
+        // with -10868 (kAudioUnitErr_FormatNotSupported) — e.g. a mono 48 kHz take into a stereo 44.1 kHz
+        // output. Run file → timePitch → mixer in the file's format; the main mixer converts to the output.
+        let format = file.processingFormat
+        if engine.isRunning { engine.stop() }
         engine.disconnectNodeOutput(fileNode)
-        engine.connect(fileNode, to: timePitch, format: file.processingFormat)
+        engine.disconnectNodeOutput(timePitch)
+        engine.connect(fileNode, to: timePitch, format: format)
+        engine.connect(timePitch, to: engine.mainMixerNode, format: format)
         try startEngine()
         kind = .file
         duration = Double(file.length) / file.processingFormat.sampleRate

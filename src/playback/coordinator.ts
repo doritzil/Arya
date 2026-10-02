@@ -122,7 +122,9 @@ export const usePlayback = create<PlaybackState>((set, get) => {
         Audio.play();
         set({ status: 'playing' });
       } catch (e) {
-        if (!stale()) set({ status: 'error', error: e instanceof Error ? e.message : 'Playback failed' });
+        if (stale()) return;
+        console.warn('[playback] failed', source.kind, e);
+        set({ status: 'error', error: friendlyError(source, e) });
       }
     },
 
@@ -167,6 +169,15 @@ export const usePlayback = create<PlaybackState>((set, get) => {
     },
   };
 });
+
+/** Our own messages (already written for people) pass through; native exceptions don't. */
+function friendlyError(source: Source, e: unknown): string {
+  const message = e instanceof Error ? e.message : '';
+  if (message && !/exception|error -?\d|\(at |ERR_/i.test(message)) return message;
+  if (source.kind === 'recording') return "Couldn't play this recording. Try again, or record a new take.";
+  if (source.kind === 'synth') return "Couldn't play these notes on the piano. Try again.";
+  return "Couldn't play this song. Try again in a moment.";
+}
 
 /** True when `key` is the active source and playing (or about to) — drives play/pause icons in place. */
 export const useIsPlaying = (key: string) =>
