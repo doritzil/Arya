@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import { keyboardAvailability, takesFor, useLibrary } from '@/data/store';
+import { confirmRemoveSong } from '@/lib/confirm';
 import type { Song } from '@/data/types';
 import { formatShortDate, isToday } from '@/lib/format';
 import { space, useTheme } from '@/theme';
@@ -18,9 +19,15 @@ export function LearningCard({ song }: { song: Song }) {
   const keys = keyboardAvailability(song, projects).state;
   const added = isToday(song.addedAt) ? 'Added today' : `Added ${formatShortDate(song.addedAt)}`;
   const takesLabel = takes === 0 ? 'No takes yet' : takes === 1 ? '1 take' : `${takes} takes`;
+  const removeSong = useLibrary((s) => s.removeSong);
+  const askRemove = () => confirmRemoveSong(song.title, takes).then((yes) => yes && removeSong(song.id));
   return (
     <Pressable
       onPress={() => router.push(`/learning/${song.id}`)}
+      onLongPress={askRemove}
+      accessibilityActions={[{ name: 'remove', label: 'Remove from Learning' }]}
+      onAccessibilityAction={(e) => e.nativeEvent.actionName === 'remove' && askRemove()}
+      accessibilityHint="Long press to remove"
       accessibilityRole="button"
       accessibilityLabel={`${song.title}, ${song.artist}. ${song.status === 'learned' ? 'Learned' : 'Learning'}. ${added}, ${takesLabel}.`}>
       <Glass padding={space[4]} style={{ gap: space[3] }}>

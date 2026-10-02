@@ -93,3 +93,17 @@ describe('project writes', () => {
     expect(saved).toEqual(['queued', 'running', 'done']);
   });
 });
+
+describe('removeSong', () => {
+  it('takes the song off the list and keeps its recordings, unlinked', async () => {
+    const song = useLibrary.getState().want(hello);
+    useLibrary.getState().addProject(take(song, 'done', 5, 'r1'));
+    useLibrary.getState().removeSong(song.id);
+    const { songs, projects } = useLibrary.getState();
+    expect(songs.some((s) => s.id === song.id)).toBe(false);
+    const kept = projects.find((p) => p.id === 'r1');
+    expect(kept).toBeDefined();
+    expect(kept?.songId).toBeUndefined();
+    await flushWrites();
+  });
+});

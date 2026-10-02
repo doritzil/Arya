@@ -9,6 +9,7 @@ import { NotesSheet } from '@/features/learning/NotesSheet';
 import { NowPlaying } from '@/features/learning/NowPlaying';
 import { useNotesEntry } from '@/features/notes/notesStore';
 import { useProjectScore } from '@/features/notes/useProjectScore';
+import { confirmRemoveSong } from '@/lib/confirm';
 import { formatShortDate, formatTime, weeksSince } from '@/lib/format';
 import type { Source } from '@/playback/coordinator';
 import { space } from '@/theme';
@@ -26,6 +27,7 @@ export default function SongPage() {
   const projects = useLibrary((s) => s.projects);
   const toggleFavourite = useLibrary((s) => s.toggleFavourite);
   const markLearned = useLibrary((s) => s.markLearned);
+  const removeSong = useLibrary((s) => s.removeSong);
   const [tab, setTab] = useState(0);
 
   const takes = song ? takesFor(projects, song.id) : [];
@@ -129,6 +131,18 @@ export default function SongPage() {
             />
           )}
         </View>
+        <Button
+          label={learned ? 'Remove from Library' : 'Remove from Learning'}
+          icon="trash"
+          variant="ghost"
+          size="small"
+          style={{ alignSelf: 'center' }}
+          onPress={async () => {
+            if (!(await confirmRemoveSong(song.title, takes.length))) return;
+            router.back();
+            removeSong(song.id);
+          }}
+        />
       </View>
     </Screen>
   );

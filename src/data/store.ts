@@ -35,6 +35,8 @@ interface LibraryState {
   refreshFeed(): void;
   want(song: CatalogSong): Song;
   undoWant(catalogId: string): void;
+  /** Takes the song off Learning / Library. Its recordings stay, unlinked, under Recordings. */
+  removeSong(songId: string): void;
   dismiss(catalogId: string): void;
   markLearned(songId: string): void;
   toggleFavourite(songId: string): void;
@@ -142,6 +144,25 @@ export const useLibrary = create<LibraryState>((set, get) => ({
       await r.deleteSong(song.id);
       await r.queueFeedback(catalogId, 'undo_want');
     });
+  },
+
+  removeSong(songId) {
+    const song = get().songs.find((s) => s.id === songId);
+    if (!song) return;
+    const unlinked = get()
+      .projects.filter((p) => p.songId === songId)
+      .map(({ songId: _songId, ...p }) => p as Project);
+    const byId = new Map(unlinked.map((p) => [p.id, p]));
+    set({
+      songs: get().songs.filter((s) => s.id !== songId),
+      projects: get().projects.map((p) => byId.get(p.id) ?? p),
+    });
+    persist(async (r) => {
+      await r.deleteSong(songId);
+      // Also clears songId in each take's manifest, so a rebuild from folders doesn't relink them.
+      for (const p of unlinked) await r.upsertProject(p);
+    });
+    get().refreshFeed();
   },
 
   dismiss(catalogId) {
