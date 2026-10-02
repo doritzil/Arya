@@ -12,6 +12,7 @@ import { recoverAfterLaunch } from '@/features/record/session';
 import { listeningWeights } from '@/services/listening';
 import { ThemeProvider, useAriaFonts, useTheme } from '@/theme';
 import { Background } from '@/ui/Background';
+import { SHEET_DETENTS } from '@/ui/Sheet';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -79,15 +80,15 @@ function Shell() {
             <Stack.Screen name="edit/[projectId]" />
             <Stack.Screen
               name="sheets/edit-genres"
-              options={{ presentation: 'formSheet', sheetAllowedDetents: [0.75], sheetGrabberVisible: true }}
+              options={{ presentation: 'formSheet', sheetAllowedDetents: [SHEET_DETENTS.editGenres], sheetGrabberVisible: true }}
             />
             <Stack.Screen
               name="sheets/how-its-written"
-              options={{ presentation: 'formSheet', sheetAllowedDetents: [0.85], sheetGrabberVisible: true }}
+              options={{ presentation: 'formSheet', sheetAllowedDetents: [SHEET_DETENTS.howItsWritten], sheetGrabberVisible: true }}
             />
             <Stack.Screen
               name="sheets/share"
-              options={{ presentation: 'formSheet', sheetAllowedDetents: [0.6], sheetGrabberVisible: true }}
+              options={{ presentation: 'formSheet', sheetAllowedDetents: [SHEET_DETENTS.share], sheetGrabberVisible: true }}
             />
           </Stack.Protected>
         </Stack>

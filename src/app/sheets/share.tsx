@@ -12,7 +12,7 @@ import { Button } from '@/ui/Button';
 import { Glass } from '@/ui/Glass';
 import { Icon } from '@/ui/Icon';
 import { IconTile } from '@/ui/IconTile';
-import { Sheet } from '@/ui/Sheet';
+import { SHEET_DETENTS, Sheet } from '@/ui/Sheet';
 import { Text } from '@/ui/Text';
 
 const OPTIONS: { kind: ExportKind; title: string; body: string; icon: 'file' | 'note' | 'piano'; cta: string }[] = [
@@ -35,6 +35,7 @@ export default function Share() {
 
   return (
     <Sheet
+      detent={SHEET_DETENTS.share}
       title="Share your notes"
       subtitle={title}
       footer={

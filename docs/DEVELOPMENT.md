@@ -67,6 +67,9 @@ scripts/            gen-tokens.mjs (tokens.json → TS), gen-icons.mjs (Phosphor
 Generated files — don't edit by hand: `src/theme/tokens.generated.ts` (`pnpm gen:tokens`),
 `src/ui/icons.generated.ts` (`pnpm gen:icons`).
 
+App icon: the source is `assets/images/favicon.svg`. `icon.png` (iOS, square and opaque — iOS rounds the corners),
+`favicon.png`, `splash-icon.png` and the Android adaptive layers are rendered from it.
+
 ## Where the build differs from ARCHITECTURE.md
 
 | Spec | Built | Why |

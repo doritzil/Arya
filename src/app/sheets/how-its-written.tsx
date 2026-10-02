@@ -8,7 +8,7 @@ import { space, useTheme } from '@/theme';
 import { Button } from '@/ui/Button';
 import { SourceSwitch } from '@/ui/Chips';
 import { IconButton } from '@/ui/IconButton';
-import { Sheet } from '@/ui/Sheet';
+import { SHEET_DETENTS, Sheet } from '@/ui/Sheet';
 import { Text } from '@/ui/Text';
 
 const TIME_SIGS: TimeSig[] = ['2/4', '3/4', '4/4', '6/8'];
@@ -37,6 +37,7 @@ export default function HowItsWritten() {
 
   return (
     <Sheet
+      detent={SHEET_DETENTS.howItsWritten}
       title="How it's written"
       subtitle="We guessed these from your playing. Change anything — the score updates right away."
       footer={<Button label="Done" onPress={() => router.back()} />}>

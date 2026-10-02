@@ -5,7 +5,7 @@ import { TextInput, View } from 'react-native';
 import { formatTakeStamp } from '@/lib/format';
 import { fontFamily, radius, space, typeScale, useTheme } from '@/theme';
 import { Button } from '@/ui/Button';
-import { Sheet } from '@/ui/Sheet';
+import { SHEET_DETENTS, Sheet } from '@/ui/Sheet';
 import { Text } from '@/ui/Text';
 
 export default function NameIdea() {
@@ -16,6 +16,7 @@ export default function NameIdea() {
   const go = () => ok && router.replace({ pathname: '/take/get-ready', params: { idea: name.trim() } });
   return (
     <Sheet
+      detent={SHEET_DETENTS.nameIdea}
       title="Name your idea"
       subtitle="So you can find it later. You can rename it any time."
       footer={<Button label="Continue" icon="mic" disabled={!ok} onPress={go} />}>

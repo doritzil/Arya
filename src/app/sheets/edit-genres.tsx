@@ -8,7 +8,7 @@ import { pickedLabel } from '@/features/onboarding/pickedLabel';
 import { space } from '@/theme';
 import { Button } from '@/ui/Button';
 import { GenreChip } from '@/ui/Chips';
-import { Sheet } from '@/ui/Sheet';
+import { SHEET_DETENTS, Sheet } from '@/ui/Sheet';
 import { Text } from '@/ui/Text';
 
 export default function EditGenres() {
@@ -18,6 +18,7 @@ export default function EditGenres() {
   const toggle = (g: PickableGenre) => setPicked((p) => (p.includes(g) ? p.filter((x) => x !== g) : [...p, g]));
   return (
     <Sheet
+      detent={SHEET_DETENTS.editGenres}
       title="Your genres"
       subtitle="New picks show up as soon as you save."
       footer={
