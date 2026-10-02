@@ -95,8 +95,10 @@ App icon: the source is `assets/images/favicon.svg`. `icon.png` (iOS, square and
 3. **Bundle a piano SoundFont** (`AriaPiano.sf2`, ≤ 25 MB, permissive licence) — synth playback is silent without it.
 4. **Licence gates:** Verovio (LGPL-3.0, used in `ScoreView`) is still open. Basic Pitch is Apache-2.0: its
    LICENSE and NOTICE ship in the model bundle and need to appear in an in-app Acknowledgements screen.
-5. **Curated MIDI** for public-domain pieces (`catalog-midi/*.mid`) + a MIDI → RawNotes reader; until then
-   Keyboard mode's "score" source uses a generated demo piece.
+5. **More curated scores.** 11 public-domain pieces ship real scores (`src/data/curated`, built by
+   `scripts/curated/build-curated.mjs` from Mutopia sources — see `scripts/curated/SOURCES.md`). They get a
+   **Score** tab and Keyboard mode without a recording. Copyrighted songs need a licensed arrangement (or the
+   user's own MIDI/MusicXML file) to do the same.
 6. **reco-api** (Cloudflare Worker + D1, §9): catalog, Apple Music IDs, feedback outbox flush. Until then the app
    uses Apple's public iTunes Search API (`src/services/appleMusic.ts`) for preview URLs and IDs, and Discover
    search shows the whole Apple Music catalog below the 71 rated seed songs. Those songs have no difficulty

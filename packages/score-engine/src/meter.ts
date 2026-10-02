@@ -7,7 +7,7 @@ export interface MeterInfo {
   unit: number;
   /** Bar length in quarter beats. */
   beatsPerBar: number;
-  /** Felt beat in quarter beats: 1, or 1.5 (dotted quarter) in 6/8. */
+  /** Felt beat in quarter beats: 1, or 1.5 (dotted quarter) in compound metres (3/8, 6/8, 9/8, 12/8). */
   unitQ: number;
   unitsPerBar: number;
   compound: boolean;
@@ -17,7 +17,7 @@ export interface MeterInfo {
 
 export function meterInfo(timeSig: TimeSig): MeterInfo {
   const [c, u] = timeSig.split('/').map(Number) as [number, number];
-  const compound = timeSig === '6/8';
+  const compound = u === 8 && c % 3 === 0;
   const beatsPerBar = (c * 4) / u;
   const unitQ = compound ? 1.5 : 1;
   return {

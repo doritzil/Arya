@@ -95,7 +95,7 @@ export const DEFAULT_PREFS: Prefs = {
 
 /** §6.6 — which notes Keyboard mode can show for a song. */
 export type KeyboardAvailability =
-  | { state: 'score'; midiPath: string }
+  | { state: 'score'; catalogId: string }
   | { state: 'myNotes'; projectId: string; createdAt: number }
   | { state: 'onTheWay'; projectId: string; progress: number }
   | { state: 'locked' };

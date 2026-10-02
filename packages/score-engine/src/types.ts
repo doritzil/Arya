@@ -11,6 +11,8 @@ export interface RawNote {
   onset: number; // sec
   offset: number; // sec
   velocity: number; // 1-127
+  /** Known staff (curated scores); otherwise the hand split decides. */
+  staff?: Staff;
 }
 export interface PedalSpan {
   on: number;
@@ -19,9 +21,15 @@ export interface PedalSpan {
 export interface RawNotes {
   notes: RawNote[];
   pedal: PedalSpan[];
+  /**
+   * Curated scores: onsets are exact at this quarter-note tempo and t = 0 is the first barline, so the
+   * beat grid is rigid instead of tracked (no tempo or downbeat detection).
+   */
+  exactTempoBpm?: number;
 }
 
-export type TimeSig = '2/4' | '3/4' | '4/4' | '6/8';
+/** The first four are offered for recordings; the rest come with curated scores. */
+export type TimeSig = '2/4' | '3/4' | '4/4' | '6/8' | '2/2' | '3/8' | '9/8' | '12/8';
 export type Grid = 'quarter' | 'eighth' | 'sixteenth';
 export type KeyMode = 'major' | 'minor';
 
@@ -196,6 +204,7 @@ export interface PerfNote {
   onset: number;
   offset: number;
   velocity: number;
+  staff?: Staff;
 }
 
 /** A note in beat space, before staff/spelling. */

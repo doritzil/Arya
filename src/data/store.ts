@@ -4,6 +4,7 @@ import { rankRecommendations } from '@/services/recommend';
 
 import { createRepo } from './createRepo';
 import type { LibraryRepo } from './repo';
+import { hasCuratedScore } from './curated';
 import { SEED_CATALOG } from './seedCatalog';
 import {
   DEFAULT_PREFS,
@@ -228,7 +229,7 @@ export function keyboardAvailability(
   const done = takes.filter((p) => p.transcriptionStatus === 'done');
   const preferred = preferProjectId ? done.find((p) => p.id === preferProjectId) : undefined;
   if (preferred) return { state: 'myNotes', projectId: preferred.id, createdAt: preferred.createdAt };
-  if (song.midiPath) return { state: 'score', midiPath: song.midiPath };
+  if (hasCuratedScore(song.catalogId)) return { state: 'score', catalogId: song.catalogId };
   const latest = done[0];
   if (latest) return { state: 'myNotes', projectId: latest.id, createdAt: latest.createdAt };
   const running = takes.find((p) => p.transcriptionStatus === 'queued' || p.transcriptionStatus === 'running');

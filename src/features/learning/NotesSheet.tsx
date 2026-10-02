@@ -17,7 +17,7 @@ const SHEET_HEIGHT = 320;
  * The song page's "My notes" view (FR-32): the take's sheet music in place of the waveform, the notes
  * glowing as the piano plays them (FR-15), and a way into Your notes to edit or share.
  */
-export function NotesSheet({ projectId, score, sourceKey }: { projectId: string; score: ProjectScore | null; sourceKey: string }) {
+export function NotesSheet({ projectId, score, sourceKey }: { projectId?: string; score: ProjectScore | null; sourceKey: string }) {
   const { colors } = useTheme();
   const active = usePlayback((s) => s.source?.key === sourceKey);
   const position = usePlayback((s) => (active ? s.positionSec : -1));
@@ -47,7 +47,12 @@ export function NotesSheet({ projectId, score, sourceKey }: { projectId: string;
           </Text>
         )}
       </Glass>
-      {score ? (
+      {score && !projectId ? (
+        <Text variant="footnote" color="inkMuted" align="center">
+          {score.build.model.barCount} bars{score.attribution ? ` · ${score.attribution}` : ''}
+        </Text>
+      ) : null}
+      {score && projectId ? (
         <Pressable
           onPress={() => router.push(`/record/${projectId}`)}
           accessibilityRole="button"

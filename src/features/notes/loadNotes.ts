@@ -1,17 +1,33 @@
-import type { RawNotes } from '@aria/score-engine';
+import type { RawNotes, ScoreSettings } from '@aria/score-engine';
+
+import { loadCuratedScore } from '@/data/curated';
+import { useLibrary } from '@/data/store';
 
 import { takeFiles } from '../record/takeFiles';
 
 import { demoRawNotes } from './demoNotes';
 
+export interface LoadedNotes {
+  notes: RawNotes;
+  /** How the source should be written (curated scores); recordings use the take's own settings. */
+  settings?: ScoreSettings;
+  attribution?: string;
+}
+
 /**
- * Raw notes for a source id: `score:<songId>` (curated public-domain MIDI) or a project id.
- * Demo projects (web preview) and curated scores use generated notes until the curated MIDI files ship.
+ * Notes for a source id: `score:<songId>` (the song's curated public-domain score) or a project id.
+ * Demo projects (web preview) use generated notes.
  */
-export async function loadProjectNotes(id: string): Promise<RawNotes | null> {
-  if (id.startsWith('score:')) return demoRawNotes(hash(id), 24, 66);
-  if (id.startsWith('p-')) return demoRawNotes(hash(id), 16, 72);
-  return takeFiles.readRawNotes(id);
+export async function loadProjectNotes(id: string): Promise<LoadedNotes | null> {
+  if (id.startsWith('score:')) {
+    const songId = id.slice('score:'.length);
+    const catalogId = useLibrary.getState().songs.find((s) => s.id === songId)?.catalogId;
+    const curated = catalogId ? loadCuratedScore(catalogId) : null;
+    return curated ? { notes: curated.raw, settings: curated.settings, attribution: curated.attribution } : null;
+  }
+  if (id.startsWith('p-')) return { notes: demoRawNotes(hash(id), 16, 72) };
+  const notes = await takeFiles.readRawNotes(id);
+  return notes ? { notes } : null;
 }
 
 function hash(s: string) {

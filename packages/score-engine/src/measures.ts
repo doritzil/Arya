@@ -105,7 +105,7 @@ function allowedStraight(len: number, dots: 0 | 1, rel: number, meter: MeterInfo
     if (rel % U !== 0) return false;
     if (meter.compound) return len % U === 0;
     const half = meter.barTicks / 2;
-    if (meter.timeSig === '4/4' && rel !== 0 && rel < half && rel + len > half) return false;
+    if ((meter.timeSig === '4/4' || meter.timeSig === '2/2') && rel !== 0 && rel < half && rel + len > half) return false;
     return true;
   }
   const relU = rel % U;

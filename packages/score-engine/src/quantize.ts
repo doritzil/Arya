@@ -73,7 +73,14 @@ export function quantize(
       prev.velocity = Math.max(prev.velocity, n.velocity);
       continue;
     }
-    byKey.set(key, { id: n.id, pitch: n.pitch, beat: qOn / TPQ, beats: len / TPQ, velocity: n.velocity });
+    byKey.set(key, {
+      id: n.id,
+      pitch: n.pitch,
+      beat: qOn / TPQ,
+      beats: len / TPQ,
+      velocity: n.velocity,
+      ...(n.staff ? { staff: n.staff } : null),
+    });
   }
   const out = [...byKey.values()];
   out.sort((a, b) => a.beat - b.beat || a.pitch - b.pitch);

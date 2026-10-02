@@ -11,12 +11,14 @@ import { useEffect, useMemo, useState } from 'react';
 
 import type { SynthNote } from '@modules/aria-audio';
 
-import { loadProjectNotes } from './loadNotes';
+import { loadProjectNotes, type LoadedNotes } from './loadNotes';
 
 export const DEFAULT_SCORE_SETTINGS: ScoreSettings = { timeSig: '4/4', grid: 'eighth', triplets: false };
 
 export interface ProjectScore {
   raw: RawNotes;
+  /** Source credit for curated scores. */
+  attribution?: string;
   build: BuildResult;
   fallNotes: FallNote[];
   synthNotes: SynthNote[];
@@ -38,19 +40,21 @@ export function useProjectScore(
   settings: ScoreSettings = DEFAULT_SCORE_SETTINGS,
   edits?: EditLog,
 ): ProjectScore | null {
-  const [raw, setRaw] = useState<{ id: string; notes: RawNotes } | null>(null);
+  const [loaded, setLoaded] = useState<{ id: string; data: LoadedNotes } | null>(null);
   useEffect(() => {
     if (!sourceId) return;
     let alive = true;
     loadProjectNotes(sourceId)
-      .then((notes) => alive && notes && setRaw({ id: sourceId, notes }))
+      .then((data) => alive && data && setLoaded({ id: sourceId, data }))
       .catch((e) => console.warn('[notes] load failed', e));
     return () => {
       alive = false;
     };
   }, [sourceId]);
-  return useMemo(
-    () => (raw && raw.id === sourceId ? deriveScore(raw.notes, settings, edits) : null),
-    [raw, sourceId, settings, edits],
-  );
+  return useMemo(() => {
+    if (!loaded || loaded.id !== sourceId) return null;
+    // Curated scores come with their own metre, key and tempo.
+    const s = deriveScore(loaded.data.notes, loaded.data.settings ?? settings, edits);
+    return loaded.data.attribution ? { ...s, attribution: loaded.data.attribution } : s;
+  }, [loaded, sourceId, settings, edits]);
 }

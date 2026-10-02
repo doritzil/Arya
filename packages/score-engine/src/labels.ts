@@ -1,4 +1,5 @@
 import type { Grid, KeyMode, ScoreModel } from './types';
+import { meterInfo } from './meter';
 import { fifthsToSpelling } from './spell';
 
 /** "D♭" etc. for the tonic of a key signature + mode. */
@@ -19,7 +20,7 @@ const GRID_LABEL: Record<Grid, string> = { quarter: 'quarters', eighth: 'eighths
 /** "♩ 80 · 4/4 · D♭ major · eighths". In 6/8 the tempo is shown per dotted quarter ("♩. 60"). */
 export function summaryLabel(model: ScoreModel): string {
   const s = model.settings;
-  const tempo = s.timeSig === '6/8' ? `♩. ${Math.round(s.tempoBpm / 1.5)}` : `♩ ${Math.round(s.tempoBpm)}`;
+  const tempo = meterInfo(s.timeSig).compound ? `♩. ${Math.round(s.tempoBpm / 1.5)}` : `♩ ${Math.round(s.tempoBpm)}`;
   const grid = GRID_LABEL[s.grid] + (s.triplets ? ' + triplets' : '');
   return `${tempo} · ${s.timeSig} · ${tonicName(s.keyFifths, s.keyMode)} ${s.keyMode} · ${grid}`;
 }

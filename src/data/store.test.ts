@@ -62,9 +62,14 @@ describe('keyboardAvailability (§6.6)', () => {
 
   it('unlocks public-domain pieces from the curated score, unless a take is chosen', () => {
     const song = useLibrary.getState().want(gymno);
-    expect(keyboardAvailability(song, [])).toEqual({ state: 'score', midiPath: gymno.midiUrl });
+    expect(keyboardAvailability(song, [])).toEqual({ state: 'score', catalogId: gymno.catalogId });
     const done = take(song, 'done', 5);
     expect(keyboardAvailability(song, [done], done.id).state).toBe('myNotes');
+  });
+  it('keeps pieces without a curated score locked (no placeholder notes)', () => {
+    const canon = SEED_CATALOG.find((s) => s.title === 'Canon in D')!;
+    expect(canon.midiUrl).toBeUndefined();
+    expect(keyboardAvailability(useLibrary.getState().want(canon), []).state).toBe('locked');
   });
 });
 

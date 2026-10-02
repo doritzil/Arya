@@ -1,23 +1,24 @@
+import { hasCuratedScore } from './curated';
 import type { CatalogSong, Genre, Level } from './types';
 
 /**
  * Seed catalog bundled with the app so Discover works before reco-api exists and when offline on first
- * launch. Difficulty ratings are hand-curated. `midiUrl` marks public-domain pieces with curated MIDI.
+ * launch. Difficulty ratings are hand-curated. `midiUrl` marks pieces with a curated score (src/data/curated).
  */
-type Row = [title: string, artist: string, genre: Genre, level: Level, publicDomain?: true];
+type Row = [title: string, artist: string, genre: Genre, level: Level];
 
 const ROWS: Row[] = [
-  ['Clair de Lune', 'Debussy', 'Classical', 3, true],
-  ['Gymnopédie No. 1', 'Satie', 'Classical', 2, true],
-  ['Für Elise', 'Beethoven', 'Classical', 2, true],
-  ['Prelude in E minor, Op. 28 No. 4', 'Chopin', 'Classical', 3, true],
-  ['Minuet in G', 'Bach (attr. Petzold)', 'Classical', 1, true],
-  ['Moonlight Sonata, 1st mvt', 'Beethoven', 'Classical', 3, true],
-  ['Arabesque No. 1', 'Debussy', 'Classical', 4, true],
-  ['Nocturne in E-flat, Op. 9 No. 2', 'Chopin', 'Classical', 4, true],
-  ['Canon in D', 'Pachelbel', 'Classical', 2, true],
-  ['Maple Leaf Rag', 'Scott Joplin', 'Jazz', 4, true],
-  ['The Entertainer', 'Scott Joplin', 'Jazz', 3, true],
+  ['Clair de Lune', 'Debussy', 'Classical', 3],
+  ['Gymnopédie No. 1', 'Satie', 'Classical', 2],
+  ['Für Elise', 'Beethoven', 'Classical', 2],
+  ['Prelude in E minor, Op. 28 No. 4', 'Chopin', 'Classical', 3],
+  ['Minuet in G', 'Bach (attr. Petzold)', 'Classical', 1],
+  ['Moonlight Sonata, 1st mvt', 'Beethoven', 'Classical', 3],
+  ['Arabesque No. 1', 'Debussy', 'Classical', 4],
+  ['Nocturne in E-flat, Op. 9 No. 2', 'Chopin', 'Classical', 4],
+  ['Canon in D', 'Pachelbel', 'Classical', 2],
+  ['Maple Leaf Rag', 'Scott Joplin', 'Jazz', 4],
+  ['The Entertainer', 'Scott Joplin', 'Jazz', 3],
   ['Autumn Leaves', 'Joseph Kosma', 'Jazz', 3],
   ['Take Five', 'Dave Brubeck', 'Jazz', 4],
   ['Fly Me to the Moon', 'Bart Howard', 'Jazz', 3],
@@ -50,12 +51,12 @@ const ROWS: Row[] = [
   ['Lovely Day', 'Bill Withers', 'R&B', 2],
   ['Isn’t She Lovely', 'Stevie Wonder', 'R&B', 3],
   ['Superstition', 'Stevie Wonder', 'R&B', 3],
-  ['Amazing Grace', 'Traditional', 'Worship', 1, true],
-  ['How Great Thou Art', 'Traditional', 'Worship', 2, true],
-  ['Be Thou My Vision', 'Traditional', 'Worship', 1, true],
+  ['Amazing Grace', 'Traditional', 'Worship', 1],
+  ['How Great Thou Art', 'Traditional', 'Worship', 2],
+  ['Be Thou My Vision', 'Traditional', 'Worship', 1],
   ['10,000 Reasons', 'Matt Redman', 'Worship', 2],
   ['Oceans', 'Hillsong United', 'Worship', 2],
-  ['What a Friend We Have in Jesus', 'Charles Converse', 'Worship', 1, true],
+  ['What a Friend We Have in Jesus', 'Charles Converse', 'Worship', 1],
   ['City of Stars', 'Justin Hurwitz', 'Musicals', 2],
   ['Memory', 'Andrew Lloyd Webber', 'Musicals', 3],
   ['Defying Gravity', 'Stephen Schwartz', 'Musicals', 3],
@@ -87,7 +88,7 @@ const slug = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 
-export const SEED_CATALOG: CatalogSong[] = ROWS.map(([title, artist, genre, difficulty, pd]) => {
+export const SEED_CATALOG: CatalogSong[] = ROWS.map(([title, artist, genre, difficulty]) => {
   const catalogId = `${slug(title)}--${slug(artist)}`;
   return {
     catalogId,
@@ -96,6 +97,6 @@ export const SEED_CATALOG: CatalogSong[] = ROWS.map(([title, artist, genre, diff
     genre,
     difficulty,
     durationSec: 150 + ((title.length * 37) % 180),
-    ...(pd ? { midiUrl: `catalog-midi/${catalogId}.mid` } : null),
+    ...(hasCuratedScore(catalogId) ? { midiUrl: `curated:${catalogId}` } : null),
   };
 });

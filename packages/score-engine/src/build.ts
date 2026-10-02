@@ -26,18 +26,20 @@ export function buildScore(raw: RawNotes, settings: ScoreSettings, edits?: EditL
   const ev = onsetEvents(perf);
 
   // tempo & beats
-  const detected = estimateTempo(ev, meter.unitQ, meter.compound, settings.countInBpm);
+  const lastSec = perf.reduce((m, n) => Math.max(m, n.offset), 0);
+  const exact = raw.exactTempoBpm && raw.exactTempoBpm > 0 ? raw.exactTempoBpm : undefined;
+  const detected = exact ?? estimateTempo(ev, meter.unitQ, meter.compound, settings.countInBpm);
   const override = settings.tempoBpm && settings.tempoBpm > 0 ? Math.min(400, Math.max(20, settings.tempoBpm)) : undefined;
-  const tempo = override ?? detected;
+  const tempo = exact ?? override ?? detected;
   // an override unrelated to what was played (not ~×½, ×1, ×2, ×3) gets a rigid grid instead of tracking
   const related = [1 / 3, 0.5, 1, 2, 3].some((r) => Math.abs(tempo / (detected * r) - 1) < 0.12);
   const P = (meter.unitQ * 60) / tempo;
-  const unitTimes = trackBeats(ev, P, !related);
+  // Curated scores: a rigid grid from t = 0 (the first barline) — nothing to detect.
+  const unitTimes = exact ? rigidUnits(P, lastSec) : trackBeats(ev, P, !related);
   const unit = makeInterp(unitTimes);
-  const u0 = chooseDownbeat(ev, unit, meter.unitsPerBar, P);
-  const lastSec = perf.reduce((m, n) => Math.max(m, n.offset), 0);
+  const u0 = exact ? 0 : chooseDownbeat(ev, unit, meter.unitsPerBar, P);
   const lastQ = Math.max(0, (unit.toPos(lastSec) - u0) * meter.unitQ);
-  const tempoOut = override ?? Math.round(detected);
+  const tempoOut = exact ?? override ?? Math.round(detected);
   const prelim = makeBeatMap(quarterBeatSecs(unitTimes, u0, meter.unitQ, Math.ceil(lastQ) + meter.beatsPerBar), tempoOut);
 
   // quantize + edits
@@ -121,4 +123,10 @@ function spellAll(notes: ScoreNote[], keyFifths: number, keyMode: ScoreModel['se
       }
     });
   }
+}
+
+/** Unit-beat times every P seconds from 0, past the last note. */
+function rigidUnits(P: number, lastSec: number): number[] {
+  const n = Math.ceil(lastSec / P) + 2;
+  return Array.from({ length: n + 1 }, (_, i) => i * P);
 }

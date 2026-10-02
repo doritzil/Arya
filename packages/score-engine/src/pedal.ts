@@ -15,6 +15,7 @@ export function applyPedal(notes: RawNote[], pedal: PedalSpan[]): PerfNote[] {
       onset: n.onset,
       offset: Math.max(n.offset, n.onset + 0.03),
       velocity: Math.min(127, Math.max(1, Math.round(n.velocity))),
+      ...(n.staff ? { staff: n.staff } : null),
     }));
 
   // next onset of the same pitch, for cutting at re-strikes

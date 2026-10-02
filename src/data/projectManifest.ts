@@ -3,6 +3,7 @@
  * I/O lives in projectStore.ts.
  */
 import type { Project, TranscriptionStatus } from './types';
+import type { TimeSig } from '@aria/score-engine';
 
 export const MANIFEST_SCHEMA = 1 as const;
 
@@ -12,7 +13,7 @@ export const MANIFEST_SCHEMA = 1 as const;
  */
 export interface ManifestScoreSettings {
   tempoBpm?: number;
-  timeSig: '2/4' | '3/4' | '4/4' | '6/8';
+  timeSig: TimeSig;
   keyFifths?: number;
   keyMode?: 'major' | 'minor';
   /** smallest note value: 4 = quarter, 8 = eighth, 16 = sixteenth */
