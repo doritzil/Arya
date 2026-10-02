@@ -27,6 +27,8 @@ export interface ScoreViewProps {
   onRendered?: (info: { pages: number; ms: number }) => void;
   /** Receives the engraved pages as SVG strings (used for PDF export). */
   onSvg?: (pages: string[]) => void;
+  /** Fixed viewport height: the score scrolls inside it and keeps the sounding note in view. */
+  viewportHeight?: number;
   dom?: import('expo/dom').DOMProps;
 }
 
@@ -47,10 +49,28 @@ export default function ScoreView({
   onTapNote,
   onRendered,
   onSvg,
+  viewportHeight,
 }: ScoreViewProps) {
   const [svg, setSvg] = useState<string>('');
   const [width, setWidth] = useState(0);
   const host = useRef<HTMLDivElement>(null);
+  const viewport = useRef<HTMLDivElement>(null);
+
+  // Follow playback: bring the first sounding note's system into view, scrolling only our own box (never
+  // the page — on web this component renders inline).
+  const firstCurrent = currentIds[0];
+  useEffect(() => {
+    const box = viewport.current;
+    if (!viewportHeight || !box || !firstCurrent) return;
+    const el = host.current?.querySelector(`#${cssId(firstCurrent)}`);
+    if (!el) return;
+    const system = el.closest('.system') ?? el;
+    const top = system.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
+    const h = system.getBoundingClientRect().height;
+    if (top < box.scrollTop || top + h > box.scrollTop + box.clientHeight) {
+      box.scrollTo({ top: Math.max(0, top - 8), behavior: 'smooth' });
+    }
+  }, [firstCurrent, viewportHeight, svg]);
 
   useEffect(() => {
     const el = host.current;
@@ -109,7 +129,9 @@ export default function ScoreView({
   }, [currentIds, selectedId, ink, accent, accentSoft]);
 
   return (
-    <div style={{ width: '100%' }}>
+    <div
+      ref={viewport}
+      style={viewportHeight ? { width: '100%', height: viewportHeight, overflowY: 'auto', WebkitOverflowScrolling: 'touch' } : { width: '100%' }}>
       <style>{css}</style>
       <div
         ref={host}

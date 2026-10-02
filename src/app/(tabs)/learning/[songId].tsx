@@ -5,7 +5,9 @@ import { View } from 'react-native';
 import { takeFiles } from '@/features/record/takeFiles';
 import { keyboardAvailability, takesFor, useLibrary } from '@/data/store';
 import { KeyboardModeRow } from '@/features/learning/KeyboardModeRow';
+import { NotesSheet } from '@/features/learning/NotesSheet';
 import { NowPlaying } from '@/features/learning/NowPlaying';
+import { useNotesEntry } from '@/features/notes/notesStore';
 import { useProjectScore } from '@/features/notes/useProjectScore';
 import { formatShortDate, formatTime, weeksSince } from '@/lib/format';
 import type { Source } from '@/playback/coordinator';
@@ -29,7 +31,9 @@ export default function SongPage() {
   const takes = song ? takesFor(projects, song.id) : [];
   const take = takes[0];
   const notesTake = takes.find((p) => p.transcriptionStatus === 'done');
-  const score = useProjectScore(tab === 2 ? notesTake?.id : undefined);
+  // Same settings + edits as Your notes, so both show the same score.
+  const entry = useNotesEntry(notesTake?.id ?? '');
+  const score = useProjectScore(tab === 2 ? notesTake?.id : undefined, entry.settings, entry.edits);
 
   if (!song) {
     return (
@@ -42,7 +46,7 @@ export default function SongPage() {
 
   // FR-32: Original · Recordings · My notes. The switch only appears once there's a recording.
   const source = takes.length ? SOURCES[tab] : 'Original';
-  let player: { eyebrow: string; subtitle: string; source: Source; duration: number };
+  let player: { eyebrow: string; subtitle: string; source: Source; duration: number; visual?: React.ReactNode };
   if (source === 'Recordings' && take) {
     player = {
       eyebrow: `Recording · ${formatShortDate(take.createdAt)}, ${formatTime(take.createdAt)}`,
@@ -56,6 +60,7 @@ export default function SongPage() {
       subtitle: 'Played on piano',
       source: { kind: 'synth', key: `synth:${notesTake.id}`, title: song.title, notes: score?.synthNotes ?? [] },
       duration: score?.durationSec ?? notesTake.durationSec,
+      visual: <NotesSheet projectId={notesTake.id} score={score} sourceKey={`synth:${notesTake.id}`} />,
     };
   } else {
     player = {
@@ -101,6 +106,7 @@ export default function SongPage() {
         source={player.source}
         fallbackDuration={player.duration}
         seed={song.title.length * 13 + tab}
+        visual={player.visual}
       />
       <View style={{ gap: space[3], marginTop: space[6] }}>
         <KeyboardModeRow song={song} availability={availability} />

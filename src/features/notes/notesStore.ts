@@ -114,7 +114,7 @@ export const canRedo = (id: string) => (redoOrder[id]?.length ?? 0) > 0;
 /** Stable selector hook for one take. */
 export function useNotesEntry(id: string) {
   useEffect(() => {
-    useNotes.getState().ensureLoaded(id);
+    if (id) useNotes.getState().ensureLoaded(id);
   }, [id]);
   return useNotes((s) => s.byProject[id] ?? FRESH_ENTRY);
 }

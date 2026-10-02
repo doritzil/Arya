@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { usePlayback, usePlaybackError, usePlaybackMode, type Source } from '@/playback/coordinator';
@@ -10,7 +11,7 @@ import { Waveform } from '@/ui/Waveform';
 
 /**
  * The full-screen player on a song's page (FR-29–31, FR-34): eyebrow → hero title → subtitle →
- * waveform → scrubber → Loop · play disc · Back 5s. Sits straight on the gradient.
+ * waveform (or `visual`, e.g. the score) → scrubber → Loop · play disc · Back 5s. Sits straight on the gradient.
  */
 export function NowPlaying({
   eyebrow,
@@ -19,6 +20,7 @@ export function NowPlaying({
   source,
   fallbackDuration,
   seed,
+  visual,
 }: {
   eyebrow: string;
   title: string;
@@ -26,6 +28,8 @@ export function NowPlaying({
   source: Source;
   fallbackDuration: number;
   seed: number;
+  /** Replaces the waveform. */
+  visual?: ReactNode;
 }) {
   const active = usePlayback((s) => s.source?.key === source.key);
   const status = usePlayback((s) => s.status);
@@ -49,7 +53,7 @@ export function NowPlaying({
         {subtitle}
       </Text>
       <View style={{ marginVertical: space[4] }}>
-        <Waveform seed={seed} height={80} progress={duration ? position / duration : 0} />
+        {visual ?? <Waveform seed={seed} height={80} progress={duration ? position / duration : 0} />}
       </View>
       <Scrubber
         position={position}
